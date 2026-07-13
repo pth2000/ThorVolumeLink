@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Thor Volume Link</string>
+    <string name="app_name_lite">Thor Volume Link Lite</string>
+    <string name="app_title">Thor Volume Link</string>
+    <string name="app_subtitle">为 AYN Thor 提供双屏音量目标切换与同步控制。</string>
+    <string name="service_description">监听模式切换键和系统音量键，根据当前模式控制主屏、副屏或双屏音量。服务不会读取屏幕内容。</string>
+    <string name="version_name">0.1.0</string>
+
+    <string name="section_status">服务状态</string>
+    <string name="status_description">完成音量接口授权并启用按键服务后，即可使用实体按键控制。</string>
+    <string name="status_checking">正在检查…</string>
+    <string name="request_authorization">配置音量接口</string>
+    <string name="open_accessibility">按键服务设置</string>
+    <string name="accessibility_enabled">按键服务 · 已启用</string>
+    <string name="accessibility_disabled">按键服务 · 未启用</string>
+    <string name="view_accessibility">查看按键服务</string>
+    <string name="enable_accessibility">启用按键服务</string>
+    <string name="privacy_note">按键服务只处理已设置的模式键和系统音量键，不读取文字、触摸内容或其他应用数据。</string>
+
+    <string name="section_mode">音量键模式</string>
+    <string name="mode_main">主屏</string>
+    <string name="mode_secondary">副屏</string>
+    <string name="mode_sync">双屏联动</string>
+    <string name="mode_main_description">音量键保持 Android 原生行为，调整主屏媒体音量。</string>
+    <string name="mode_secondary_description">音量键由本应用接管，仅调整副屏音量。</string>
+    <string name="mode_sync_description">保留系统音量面板，并按相同比例同步副屏音量。</string>
+    <string name="mode_changed">音量键模式：%1$s</string>
+
+    <string name="section_controls">按键行为</string>
+    <string name="controls_description">长按模式键可依次切换主屏、副屏和双屏联动。音量增加和降低始终使用系统音量键。</string>
+    <string name="switch_key">模式键</string>
+    <string name="switch_key_value">模式键\n%1$s</string>
+    <string name="hold_duration">长按判定时长</string>
+    <string name="hold_duration_value">长按判定时长\n%1$d ms</string>
+    <string name="volume_step">每次调节幅度</string>
+    <string name="volume_step_value">每次调节幅度\n%1$d 档</string>
+    <string name="change">更改</string>
+    <string name="adjust">调整</string>
+    <string name="reset_controls">恢复默认按键设置</string>
+    <string name="controls_reset">已恢复默认按键设置</string>
+    <string name="key_capture_title">设置模式键</string>
+    <string name="key_capture_message">请按下要使用的实体按键。返回、主页和最近任务键可保留短按功能；其他按键将由本应用占用。音量键不可选择。</string>
+    <string name="key_capture_accessibility_hint">建议先启用按键服务，以便可靠识别按键。</string>
+    <string name="key_capture_success">模式键已设为 %1$s</string>
+    <string name="key_capture_invalid">该按键不能作为模式键。</string>
+    <string name="cancel">取消</string>
+    <string name="hold_dialog_title">长按判定时长</string>
+    <string name="hold_recommended">%1$d ms（推荐）</string>
+    <string name="hold_plain">%1$d ms</string>
+    <string name="step_dialog_title">每次调节幅度</string>
+    <string name="step_precise">1 档（精细）</string>
+    <string name="step_plain">%1$d 档</string>
+    <string name="step_fast">5 档（快速）</string>
+
+    <string name="section_volume">实时音量</string>
+    <string name="volume_description">此页面打开时，音量信息会自动刷新。</string>
+    <string name="main_volume">主屏媒体音量</string>
+    <string name="secondary_volume">副屏音量</string>
+    <string name="main_volume_value">主屏媒体音量\n%1$d / %2$d</string>
+    <string name="secondary_volume_value">副屏音量\n%1$d / 15</string>
+    <string name="secondary_unavailable">副屏音量\n控制接口不可用</string>
+    <string name="secondary_waiting_authorization">副屏音量\n等待授权</string>
+    <string name="secondary_reading">副屏音量\n正在读取…</string>
+    <string name="secondary_read_failed">副屏音量\n读取失败</string>
+    <string name="sync_now">将副屏音量匹配至主屏</string>
+    <string name="sync_success">副屏音量已匹配至 %1$d%%</string>
+    <string name="sync_failed">无法同步副屏音量</string>
+    <string name="secondary_feedback">副屏音量 %1$d / 15</string>
+    <string name="secondary_adjust_failed">无法调整副屏音量</string>
+    <string name="linked_sync_failed">主屏音量已调整，但副屏同步失败</string>
+    <string name="recent_error">最近一次错误\n%1$s</string>
+
+    <string name="authorization_complete">音量接口授权已完成</string>
+    <string name="open_accessibility_failed">无法打开无障碍设置</string>
+    <string name="mode_switch_failed">无法切换音量键模式</string>
+    <string name="key_processing_failed">按键处理失败，请打开应用查看详细信息。</string>
+
+    <string name="binding_unset">未设置</string>
+    <string name="binding_scan_code">扫描码 %1$d</string>
+    <string name="binding_unknown">未知按键</string>
+    <string name="key_back">返回</string>
+    <string name="key_home">主页</string>
+    <string name="key_recents">最近任务</string>
+
+    <string name="backend_shizuku_connected">Shizuku · 已连接</string>
+    <string name="backend_shizuku_disconnected">Shizuku · 未连接</string>
+    <string name="authorization_shizuku_granted">Shizuku 权限 · 已授予</string>
+    <string name="authorization_shizuku_missing">Shizuku 权限 · 未授予</string>
+    <string name="authorization_shizuku_recheck">重新检查 Shizuku 权限</string>
+    <string name="authorization_shizuku_grant">授予 Shizuku 权限</string>
+    <string name="shizuku_not_running">Shizuku 尚未连接，请先启动 Shizuku。</string>
+    <string name="shizuku_permission_denied">未授予 Shizuku 权限。</string>
+    <string name="shizuku_service_unavailable">Shizuku 音量服务不可用。</string>
+    <string name="shizuku_service_start_failed">无法启动 Shizuku 音量服务。</string>
+
+    <string name="backend_lite_ready">Lite 兼容接口 · 已就绪</string>
+    <string name="authorization_settings_allowed">修改系统设置 · 已允许</string>
+    <string name="authorization_settings_missing">修改系统设置 · 未允许</string>
+    <string name="authorization_settings_review">查看修改系统设置权限</string>
+    <string name="authorization_settings_allow">允许修改系统设置</string>
+
+    <string name="footer_text">%1$s · %2$s · %3$s</string>
+
+    <string name="error_save_mode">保存音量键模式失败</string>
+    <string name="error_save_binding">保存模式键失败</string>
+    <string name="error_begin_capture">开始按键录入失败</string>
+    <string name="error_save_hold">保存长按判定时长失败</string>
+    <string name="error_save_step">保存调节幅度失败</string>
+    <string name="error_reset_controls">恢复按键设置失败</string>
+    <string name="error_toast">显示提示失败</string>
+    <string name="error_read_main">读取主屏音量失败</string>
+    <string name="error_read_main_max">读取主屏音量范围失败</string>
+    <string name="error_adjust_main">调整主屏音量失败</string>
+    <string name="error_write_secondary">写入副屏音量失败</string>
+    <string name="error_switch_mode">切换音量键模式失败</string>
+    <string name="error_key_event">处理实体按键失败（keyCode=%1$d）</string>
+    <string name="error_vibration">触觉反馈失败</string>
+    <string name="error_open_accessibility">打开无障碍设置失败</string>
+    <string name="error_check_accessibility">检查按键服务状态失败</string>
+    <string name="no_recent_errors">没有最近错误</string>
+
+    <string name="settings">设置</string>
+    <string name="back">返回</string>
+    <string name="first_use_title">完成首次设置</string>
+    <string name="first_use_description">配置音量接口并启用按键服务后，请前往“按键与控制”，选择是否使用实体键切换模式。</string>
+    <string name="open_key_controls">前往按键与控制</string>
+    <string name="not_now">稍后</string>
+    <string name="settings_subtitle">管理按键行为、语言、外观和项目信息。</string>
+    <string name="section_key_controls">按键与控制</string>
+    <string name="mode_key_enabled">使用实体键切换模式</string>
+    <string name="mode_key_enabled_summary">长按已配置的按键，在主屏、副屏和双屏联动之间循环切换。</string>
+    <string name="mode_key_disabled_summary">只能从应用内切换模式，已配置按键将保持原有系统行为。</string>
+    <string name="section_general">通用</string>
+    <string name="language">语言</string>
+    <string name="language_system">跟随系统</string>
+    <string name="language_chinese">简体中文</string>
+    <string name="language_english">English</string>
+    <string name="night_mode">外观</string>
+    <string name="night_system">跟随系统</string>
+    <string name="night_light">浅色</string>
+    <string name="night_dark">深色</string>
+    <string name="setting_value">%1$s\n%2$s</string>
+    <string name="section_project">项目</string>
+    <string name="about_project">关于 Thor Volume Link</string>
+    <string name="github_repository">GitHub 仓库</string>
+    <string name="project_description">面向 AYN Thor 的独立开源双屏音量控制工具。</string>
+    <string name="about_version">版本 %1$s · %2$s</string>
+    <string name="source_code_description">查看源代码、版本发布和问题反馈。</string>
+    <string name="license_title">开源许可证</string>
+    <string name="license_name">MIT 许可证</string>
+    <string name="license_summary">Copyright © 2026 Thor Volume Link contributors</string>
+    <string name="privacy_title">隐私说明</string>
+    <string name="privacy_description">无障碍服务只处理已配置的实体按键和音量键，不读取屏幕文字、触摸内容或其他应用数据。</string>
+    <string name="independent_project">Thor Volume Link 是一个独立社区项目。</string>
+    <string name="open_github">打开 GitHub</string>
+    <string name="link_open_failed">无法打开链接。</string>
+    <string name="error_open_link">打开项目链接失败</string>
+    <string name="error_save_mode_key_enabled">保存模式键设置失败</string>
+    <string name="error_save_night_mode">保存外观设置失败</string>
+</resources>

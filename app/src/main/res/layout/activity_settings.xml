@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="20dp"
+        android:paddingTop="20dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="32dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/back"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/button_outline"
+                android:contentDescription="@string/back"
+                android:padding="10dp"
+                android:src="@drawable/ic_arrow_back" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/TextTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings" />
+
+                <TextView
+                    style="@style/TextCaption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="@string/settings_subtitle" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                style="@style/TextSection"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/section_key_controls" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/TextPreferenceTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/mode_key_enabled" />
+
+                    <TextView
+                        android:id="@+id/mode_key_summary"
+                        style="@style/TextPreferenceSummary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="@string/mode_key_enabled_summary" />
+                </LinearLayout>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/mode_key_enabled"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/color_outline_variant" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/switch_key_status"
+                    style="@style/TextValue"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/switch_key" />
+
+                <Button
+                    android:id="@+id/change_switch_key"
+                    style="@style/ButtonOutline"
+                    android:layout_width="92dp"
+                    android:layout_height="44dp"
+                    android:text="@string/change" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/color_outline_variant" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/hold_status"
+                    style="@style/TextValue"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/hold_duration" />
+
+                <Button
+                    android:id="@+id/change_hold"
+                    style="@style/ButtonOutline"
+                    android:layout_width="92dp"
+                    android:layout_height="44dp"
+                    android:text="@string/adjust" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/color_outline_variant" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/step_status"
+                    style="@style/TextValue"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/volume_step" />
+
+                <Button
+                    android:id="@+id/change_step"
+                    style="@style/ButtonOutline"
+                    android:layout_width="92dp"
+                    android:layout_height="44dp"
+                    android:text="@string/adjust" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/reset_controls"
+                style="@style/ButtonTonal"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/reset_controls" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                style="@style/TextSection"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/section_general" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/language_status"
+                    style="@style/TextValue"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/language" />
+
+                <Button
+                    android:id="@+id/change_language"
+                    style="@style/ButtonOutline"
+                    android:layout_width="92dp"
+                    android:layout_height="44dp"
+                    android:text="@string/change" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/color_outline_variant" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/night_status"
+                    style="@style/TextValue"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/night_mode" />
+
+                <Button
+                    android:id="@+id/change_night"
+                    style="@style/ButtonOutline"
+                    android:layout_width="92dp"
+                    android:layout_height="44dp"
+                    android:text="@string/change" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                style="@style/TextSection"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/section_project" />
+
+            <Button
+                android:id="@+id/open_about"
+                style="@style/ButtonTonal"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="14dp"
+                android:text="@string/about_project" />
+
+            <Button
+                android:id="@+id/open_github"
+                style="@style/ButtonOutline"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/github_repository" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

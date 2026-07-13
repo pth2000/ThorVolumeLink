@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="20dp"
+    android:background="@drawable/card"
+    android:orientation="vertical"
+    android:padding="18dp">
+
+    <TextView
+        style="@style/TextSection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/section_status" />
+
+    <TextView
+        android:id="@+id/authorization_status"
+        style="@style/TextLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/status_neutral"
+        android:padding="12dp"
+        android:text="@string/status_checking" />
+
+    <TextView
+        android:id="@+id/backend_status"
+        style="@style/TextLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/status_neutral"
+        android:padding="12dp"
+        android:text="@string/status_checking" />
+
+    <TextView
+        android:id="@+id/accessibility_status"
+        style="@style/TextLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/status_neutral"
+        android:padding="12dp"
+        android:text="@string/status_checking" />
+
+    <Button
+        android:id="@+id/request_authorization"
+        style="@style/ButtonFilled"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="14dp"
+        android:text="@string/request_authorization" />
+
+    <Button
+        android:id="@+id/open_accessibility"
+        style="@style/ButtonTonal"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/open_accessibility" />
+
+    <TextView
+        android:id="@+id/error_status"
+        style="@style/TextBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/status_error"
+        android:padding="12dp"
+        android:text="@string/no_recent_errors"
+        android:visibility="gone" />
+
+    <TextView
+        style="@style/TextCaption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/privacy_note" />
+</LinearLayout>

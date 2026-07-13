@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Thor Volume Link</string>
+    <string name="app_name_lite">Thor Volume Link Lite</string>
+    <string name="app_title">Thor Volume Link</string>
+    <string name="app_subtitle">Dual-screen volume routing and synchronization for AYN Thor.</string>
+    <string name="service_description">Handles the mode-switch key and volume keys to control the primary screen, secondary screen, or both. The service does not inspect screen content.</string>
+    <string name="version_name">0.1.0</string>
+
+    <string name="section_status">Service status</string>
+    <string name="status_description">Enable the key service and authorize the volume backend before using hardware-key control.</string>
+    <string name="status_checking">Checking…</string>
+    <string name="request_authorization">Configure volume access</string>
+    <string name="open_accessibility">Key service settings</string>
+    <string name="accessibility_enabled">Key service · Enabled</string>
+    <string name="accessibility_disabled">Key service · Disabled</string>
+    <string name="view_accessibility">Review key service</string>
+    <string name="enable_accessibility">Enable key service</string>
+    <string name="privacy_note">The key service processes only the configured mode key and the volume keys. It does not read text, touch input, or data from other apps.</string>
+
+    <string name="section_mode">Volume-key mode</string>
+    <string name="mode_main">Primary</string>
+    <string name="mode_secondary">Secondary</string>
+    <string name="mode_sync">Linked</string>
+    <string name="mode_main_description">Volume keys retain Android’s default behavior and adjust the primary-screen media volume.</string>
+    <string name="mode_secondary_description">Volume keys are intercepted and adjust only the secondary-screen volume.</string>
+    <string name="mode_sync_description">Android’s volume panel remains visible while the secondary-screen volume follows the same relative level.</string>
+    <string name="mode_changed">Volume-key mode: %1$s</string>
+
+    <string name="section_controls">Key behavior</string>
+    <string name="controls_description">Long-press the mode key to cycle through Primary, Secondary, and Linked. Volume Up and Volume Down always remain the adjustment keys.</string>
+    <string name="switch_key">Mode key</string>
+    <string name="switch_key_value">Mode key\n%1$s</string>
+    <string name="hold_duration">Long-press threshold</string>
+    <string name="hold_duration_value">Long-press threshold\n%1$d ms</string>
+    <string name="volume_step">Adjustment step</string>
+    <string name="volume_step_value">Adjustment step\n%1$d level(s)</string>
+    <string name="change">Change</string>
+    <string name="adjust">Adjust</string>
+    <string name="reset_controls">Restore default key settings</string>
+    <string name="controls_reset">Default key settings restored</string>
+    <string name="key_capture_title">Set mode key</string>
+    <string name="key_capture_message">Press the hardware key to use. Back, Home, and Recents retain their short-press actions. Other keys are reserved by this app. Volume keys cannot be selected.</string>
+    <string name="key_capture_accessibility_hint">Enable the key service first for reliable key detection.</string>
+    <string name="key_capture_success">Mode key set to %1$s</string>
+    <string name="key_capture_invalid">This key cannot be used as the mode key.</string>
+    <string name="cancel">Cancel</string>
+    <string name="hold_dialog_title">Long-press threshold</string>
+    <string name="hold_recommended">%1$d ms (recommended)</string>
+    <string name="hold_plain">%1$d ms</string>
+    <string name="step_dialog_title">Adjustment step</string>
+    <string name="step_precise">1 level (precise)</string>
+    <string name="step_plain">%1$d levels</string>
+    <string name="step_fast">5 levels (fast)</string>
+
+    <string name="section_volume">Live volume</string>
+    <string name="volume_description">Values refresh automatically while this screen is open.</string>
+    <string name="main_volume">Primary media volume</string>
+    <string name="secondary_volume">Secondary-screen volume</string>
+    <string name="main_volume_value">Primary media volume\n%1$d / %2$d</string>
+    <string name="secondary_volume_value">Secondary-screen volume\n%1$d / 15</string>
+    <string name="secondary_unavailable">Secondary-screen volume\nBackend unavailable</string>
+    <string name="secondary_waiting_authorization">Secondary-screen volume\nAuthorization required</string>
+    <string name="secondary_reading">Secondary-screen volume\nReading…</string>
+    <string name="secondary_read_failed">Secondary-screen volume\nRead failed</string>
+    <string name="sync_now">Match secondary volume to primary</string>
+    <string name="sync_success">Secondary volume matched to %1$d%%</string>
+    <string name="sync_failed">Unable to synchronize secondary volume</string>
+    <string name="secondary_feedback">Secondary volume %1$d / 15</string>
+    <string name="secondary_adjust_failed">Unable to adjust secondary volume</string>
+    <string name="linked_sync_failed">Primary volume changed, but secondary synchronization failed</string>
+    <string name="recent_error">Last error\n%1$s</string>
+
+    <string name="authorization_complete">Volume access authorized</string>
+    <string name="open_accessibility_failed">Unable to open Accessibility settings</string>
+    <string name="mode_switch_failed">Unable to change volume-key mode</string>
+    <string name="key_processing_failed">Key handling failed. Open the app for details.</string>
+
+    <string name="binding_unset">Not set</string>
+    <string name="binding_scan_code">Scan code %1$d</string>
+    <string name="binding_unknown">Unknown key</string>
+    <string name="key_back">Back</string>
+    <string name="key_home">Home</string>
+    <string name="key_recents">Recents</string>
+
+    <string name="backend_shizuku_connected">Shizuku · Connected</string>
+    <string name="backend_shizuku_disconnected">Shizuku · Not connected</string>
+    <string name="authorization_shizuku_granted">Shizuku permission · Granted</string>
+    <string name="authorization_shizuku_missing">Shizuku permission · Not granted</string>
+    <string name="authorization_shizuku_recheck">Recheck Shizuku permission</string>
+    <string name="authorization_shizuku_grant">Grant Shizuku permission</string>
+    <string name="shizuku_not_running">Shizuku is not connected. Start Shizuku first.</string>
+    <string name="shizuku_permission_denied">Shizuku permission was not granted.</string>
+    <string name="shizuku_service_unavailable">Shizuku volume service is unavailable.</string>
+    <string name="shizuku_service_start_failed">Unable to start the Shizuku volume service.</string>
+
+    <string name="backend_lite_ready">Lite compatibility backend · Ready</string>
+    <string name="authorization_settings_allowed">Modify system settings · Allowed</string>
+    <string name="authorization_settings_missing">Modify system settings · Not allowed</string>
+    <string name="authorization_settings_review">Review modify-system-settings access</string>
+    <string name="authorization_settings_allow">Allow modify system settings</string>
+
+    <string name="footer_text">%1$s · %2$s · %3$s</string>
+
+    <string name="error_save_mode">Saving volume-key mode failed</string>
+    <string name="error_save_binding">Saving the mode key failed</string>
+    <string name="error_begin_capture">Starting key capture failed</string>
+    <string name="error_save_hold">Saving the long-press threshold failed</string>
+    <string name="error_save_step">Saving the adjustment step failed</string>
+    <string name="error_reset_controls">Restoring key settings failed</string>
+    <string name="error_toast">Displaying a message failed</string>
+    <string name="error_read_main">Reading primary volume failed</string>
+    <string name="error_read_main_max">Reading the primary volume range failed</string>
+    <string name="error_adjust_main">Adjusting primary volume failed</string>
+    <string name="error_write_secondary">Writing secondary volume failed</string>
+    <string name="error_switch_mode">Changing volume-key mode failed</string>
+    <string name="error_key_event">Handling hardware key failed (keyCode=%1$d)</string>
+    <string name="error_vibration">Haptic feedback failed</string>
+    <string name="error_open_accessibility">Opening Accessibility settings failed</string>
+    <string name="error_check_accessibility">Checking key-service status failed</string>
+    <string name="no_recent_errors">No recent errors</string>
+
+    <string name="settings">Settings</string>
+    <string name="back">Back</string>
+    <string name="first_use_title">Finish initial setup</string>
+    <string name="first_use_description">After configuring volume access and enabling the key service, review Key &amp; controls to choose whether a hardware key should switch modes.</string>
+    <string name="open_key_controls">Open Key &amp; controls</string>
+    <string name="not_now">Not now</string>
+    <string name="settings_subtitle">Key behavior, language, appearance, and project information.</string>
+    <string name="section_key_controls">Key &amp; controls</string>
+    <string name="mode_key_enabled">Use a hardware key to switch modes</string>
+    <string name="mode_key_enabled_summary">Long-press the configured key to cycle through Primary, Secondary, and Linked.</string>
+    <string name="mode_key_disabled_summary">Modes can be changed only from the app. The configured key keeps its original system behavior.</string>
+    <string name="section_general">General</string>
+    <string name="language">Language</string>
+    <string name="language_system">Follow system</string>
+    <string name="language_chinese">简体中文</string>
+    <string name="language_english">English</string>
+    <string name="night_mode">Appearance</string>
+    <string name="night_system">Follow system</string>
+    <string name="night_light">Light</string>
+    <string name="night_dark">Dark</string>
+    <string name="setting_value">%1$s\n%2$s</string>
+    <string name="section_project">Project</string>
+    <string name="about_project">About Thor Volume Link</string>
+    <string name="github_repository">GitHub repository</string>
+    <string name="project_description">An independent, open-source dual-screen volume controller for AYN Thor.</string>
+    <string name="about_version">Version %1$s · %2$s</string>
+    <string name="source_code_description">Source code, releases, and issue tracking.</string>
+    <string name="license_title">Open-source license</string>
+    <string name="license_name">MIT License</string>
+    <string name="license_summary">Copyright © 2026 Thor Volume Link contributors</string>
+    <string name="privacy_title">Privacy</string>
+    <string name="privacy_description">The accessibility service processes only configured hardware keys and volume keys. It does not read screen text, touch input, or data from other apps.</string>
+    <string name="independent_project">Thor Volume Link is an independent community project.</string>
+    <string name="open_github">Open GitHub</string>
+    <string name="link_open_failed">Unable to open the link.</string>
+    <string name="error_open_link">Opening project link failed</string>
+    <string name="error_save_mode_key_enabled">Saving the mode-key setting failed</string>
+    <string name="error_save_night_mode">Saving the appearance setting failed</string>
+    <string name="project_url" translatable="false">https://github.com/pth2000/ThorVolumeLink</string>
+</resources>

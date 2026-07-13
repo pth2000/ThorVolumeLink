@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:statusBarColor">@color/color_surface</item>
+        <item name="android:navigationBarColor">@color/color_surface</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:colorAccent">@color/color_primary</item>
+        <item name="android:windowBackground">@color/color_surface</item>
+    </style>
+
+    <style name="TextTitle">
+        <item name="android:textSize">28sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/color_on_surface</item>
+    </style>
+    <style name="TextHeadline">
+        <item name="android:textSize">22sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/color_on_surface</item>
+    </style>
+    <style name="TextSection">
+        <item name="android:textSize">17sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/color_on_surface</item>
+    </style>
+    <style name="TextBody">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/color_on_surface_variant</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+    <style name="TextLabel">
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/color_on_surface</item>
+    </style>
+    <style name="TextValue">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/color_on_surface</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+    </style>
+    <style name="TextCaption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/color_outline</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <style name="TextPreferenceTitle">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/color_on_surface</item>
+    </style>
+    <style name="TextPreferenceSummary">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/color_on_surface_variant</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <style name="FlatButtonBase">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+    <style name="ButtonFilled" parent="@style/FlatButtonBase">
+        <item name="android:textColor">@color/color_on_primary</item>
+        <item name="android:background">@drawable/button_filled</item>
+    </style>
+    <style name="ButtonTonal" parent="@style/FlatButtonBase">
+        <item name="android:textColor">@color/color_on_primary_container</item>
+        <item name="android:background">@drawable/button_tonal</item>
+    </style>
+    <style name="ButtonOutline" parent="@style/FlatButtonBase">
+        <item name="android:textColor">@color/color_primary</item>
+        <item name="android:background">@drawable/button_outline</item>
+    </style>
+    <style name="ButtonSegment" parent="@style/FlatButtonBase">
+        <item name="android:textColor">@color/color_on_surface</item>
+        <item name="android:minHeight">44dp</item>
+        <item name="android:paddingLeft">4dp</item>
+        <item name="android:paddingRight">4dp</item>
+    </style>
+</resources>

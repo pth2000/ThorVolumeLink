@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="20dp"
+        android:paddingTop="20dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="32dp">
+
+        <ImageButton
+            android:id="@+id/back"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/button_outline"
+            android:contentDescription="@string/back"
+            android:padding="10dp"
+            android:src="@drawable/ic_arrow_back" />
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:contentDescription="@string/app_title"
+            android:src="@mipmap/ic_launcher" />
+
+        <TextView
+            style="@style/TextTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center"
+            android:text="@string/app_title" />
+
+        <TextView
+            android:id="@+id/version"
+            style="@style/TextCaption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center" />
+
+        <TextView
+            style="@style/TextBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center"
+            android:text="@string/project_description" />
+
+        <Button
+            android:id="@+id/open_github"
+            style="@style/ButtonFilled"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="18dp"
+            android:text="@string/open_github" />
+
+        <TextView
+            style="@style/TextCaption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:gravity="center"
+            android:text="@string/source_code_description" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                style="@style/TextSection"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/license_title" />
+
+            <TextView
+                style="@style/TextPreferenceTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/license_name" />
+
+            <TextView
+                style="@style/TextPreferenceSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/license_summary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                style="@style/TextSection"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/privacy_title" />
+
+            <TextView
+                style="@style/TextBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/privacy_description" />
+        </LinearLayout>
+
+        <TextView
+            style="@style/TextCaption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="center"
+            android:text="@string/independent_project" />
+    </LinearLayout>
+</ScrollView>
