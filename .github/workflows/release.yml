@@ -1,0 +1,94 @@
+name: Signed Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v7
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Restore signing key
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_BASE64"
+          printf '%s' "$KEYSTORE_BASE64" \
+            | base64 --decode \
+            > "$RUNNER_TEMP/ThorVolumeLink-release.jks"
+
+      - name: Build signed APKs
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/ThorVolumeLink-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          ./gradlew --no-daemon clean \
+            assembleStandardRelease \
+            assembleLiteRelease
+
+      - name: Prepare and verify APKs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          cp app/build/outputs/apk/standard/release/app-standard-release.apk \
+            "dist/ThorVolumeLink-${GITHUB_REF_NAME}-standard.apk"
+
+          cp app/build/outputs/apk/lite/release/app-lite-release.apk \
+            "dist/ThorVolumeLink-${GITHUB_REF_NAME}-lite.apk"
+
+          APKSIGNER="$(find "$ANDROID_SDK_ROOT/build-tools" \
+            -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+
+          for apk in dist/*.apk; do
+            "$APKSIGNER" verify --verbose --print-certs "$apk"
+          done
+
+          sha256sum dist/*.apk > dist/SHA256SUMS.txt
+
+      - name: Create GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          args=(
+            "$GITHUB_REF_NAME"
+            dist/*
+            --verify-tag
+            --generate-notes
+            --title "Thor Volume Link $GITHUB_REF_NAME"
+          )
+
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            args+=(--prerelease)
+          fi
+
+          gh release create "${args[@]}"
+
+      - name: Remove signing key
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/ThorVolumeLink-release.jks"

@@ -4,10 +4,15 @@ local.properties
 *.iml
 /build/
 app/build/
+app/*/release/
+*.apk
+*.aab
+*.apks
 *.jks
 *.keystore
 *.p12
 *.pem
+keystore.properties
 reference-build/
 stubs/
 .DS_Store
