@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 public final class ThorApplication extends Application {
     @Override public void onCreate() {
         super.onCreate();
+        Prefs.migrateDefaults(this);
         int mode = Prefs.getNightMode(this);
         if (mode == Prefs.NIGHT_LIGHT) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);

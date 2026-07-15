@@ -34,6 +34,9 @@ final class Prefs {
     private static final String KEY_SWITCH_CODE = "switch_key_code";
     private static final String KEY_SWITCH_SCAN = "switch_scan_code";
     private static final String KEY_MODE_KEY_ENABLED = "mode_key_enabled";
+    private static final String KEY_NOTIFICATION_FEEDBACK_ENABLED = "notification_feedback_enabled";
+    private static final String KEY_VIBRATION_FEEDBACK_ENABLED = "vibration_feedback_enabled";
+    private static final String KEY_VIBRATION_FEEDBACK_CONFIGURED = "vibration_feedback_configured";
     private static final String KEY_NIGHT_MODE = "night_mode";
     private static final String KEY_ONBOARDING_SEEN = "onboarding_seen";
 
@@ -56,6 +59,25 @@ final class Prefs {
     }
 
     private Prefs() {}
+
+    /**
+     * 补齐新增设置的持久化默认值。
+     *
+     * <p>早期版本可能在设置页初始化时把震动开关误存为关闭，且没有记录这是用户选择。
+     * 因此首次运行新版时统一迁移为默认开启；迁移完成后不再覆盖用户的后续选择。</p>
+     */
+    static void migrateDefaults(Context context) {
+        try {
+            SharedPreferences values = prefs(context);
+            if (values.getBoolean(KEY_VIBRATION_FEEDBACK_CONFIGURED, false)) return;
+            values.edit()
+                    .putBoolean(KEY_VIBRATION_FEEDBACK_ENABLED, true)
+                    .putBoolean(KEY_VIBRATION_FEEDBACK_CONFIGURED, true)
+                    .commit();
+        } catch (Throwable ignored) {
+            // 读取接口仍会回退为安全默认值，不因偏好存储异常阻止应用启动。
+        }
+    }
 
     static int getMode(Context context) {
         try {
@@ -95,6 +117,44 @@ final class Prefs {
             prefs(context).edit().putBoolean(KEY_MODE_KEY_ENABLED, enabled).apply();
         } catch (Throwable error) {
             recordError(context, context.getString(R.string.error_save_mode_key_enabled), error);
+        }
+    }
+
+    /** 是否允许通过 Toast 显示模式切换和副屏音量反馈。 */
+    static boolean isNotificationFeedbackEnabled(Context context) {
+        try {
+            return prefs(context).getBoolean(KEY_NOTIFICATION_FEEDBACK_ENABLED, true);
+        } catch (Throwable ignored) {
+            return true;
+        }
+    }
+
+    static void setNotificationFeedbackEnabled(Context context, boolean enabled) {
+        try {
+            prefs(context).edit().putBoolean(KEY_NOTIFICATION_FEEDBACK_ENABLED, enabled).apply();
+        } catch (Throwable error) {
+            recordError(context, context.getString(R.string.error_save_notification_feedback), error);
+        }
+    }
+
+    /** 模式切换后是否用分段振动提示当前模式。 */
+    static boolean isVibrationFeedbackEnabled(Context context) {
+        try {
+            if (!prefs(context).getBoolean(KEY_VIBRATION_FEEDBACK_CONFIGURED, false)) return true;
+            return prefs(context).getBoolean(KEY_VIBRATION_FEEDBACK_ENABLED, true);
+        } catch (Throwable ignored) {
+            return true;
+        }
+    }
+
+    static void setVibrationFeedbackEnabled(Context context, boolean enabled) {
+        try {
+            prefs(context).edit()
+                    .putBoolean(KEY_VIBRATION_FEEDBACK_ENABLED, enabled)
+                    .putBoolean(KEY_VIBRATION_FEEDBACK_CONFIGURED, true)
+                    .apply();
+        } catch (Throwable error) {
+            recordError(context, context.getString(R.string.error_save_vibration_feedback), error);
         }
     }
 
@@ -212,6 +272,9 @@ final class Prefs {
                     .putInt(KEY_HOLD_MS, 800)
                     .putInt(KEY_STEP, 1)
                     .putBoolean(KEY_MODE_KEY_ENABLED, true)
+                    .putBoolean(KEY_NOTIFICATION_FEEDBACK_ENABLED, true)
+                    .putBoolean(KEY_VIBRATION_FEEDBACK_ENABLED, true)
+                    .putBoolean(KEY_VIBRATION_FEEDBACK_CONFIGURED, true)
                     .putInt(KEY_CAPTURE_TARGET, CAPTURE_NONE)
                     .apply();
         } catch (Throwable error) {

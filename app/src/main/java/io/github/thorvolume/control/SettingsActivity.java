@@ -2,6 +2,7 @@ package io.github.thorvolume.control;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -25,6 +26,10 @@ public final class SettingsActivity extends AppCompatActivity {
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     private SwitchCompat modeKeyEnabled;
+    private SwitchCompat notificationFeedback;
+    private SwitchCompat vibrationFeedback;
+    private TextView notificationFeedbackSummary;
+    private TextView vibrationFeedbackSummary;
     private TextView modeKeySummary;
     private TextView switchKeyStatus;
     private TextView holdStatus;
@@ -36,6 +41,7 @@ public final class SettingsActivity extends AppCompatActivity {
     private AlertDialog captureDialog;
     private int localCapturedCode;
     private int localCapturedScan;
+    private boolean refreshingNotificationFeedback;
 
     private final Runnable capturePoll = new Runnable() {
         @Override public void run() {
@@ -54,6 +60,10 @@ public final class SettingsActivity extends AppCompatActivity {
         Prefs.markOnboardingSeen(this);
 
         modeKeyEnabled = (SwitchCompat) findViewById(R.id.mode_key_enabled);
+        notificationFeedback = (SwitchCompat) findViewById(R.id.notification_feedback);
+        vibrationFeedback = (SwitchCompat) findViewById(R.id.vibration_feedback);
+        notificationFeedbackSummary = (TextView) findViewById(R.id.notification_feedback_summary);
+        vibrationFeedbackSummary = (TextView) findViewById(R.id.vibration_feedback_summary);
         modeKeySummary = (TextView) findViewById(R.id.mode_key_summary);
         switchKeyStatus = (TextView) findViewById(R.id.switch_key_status);
         holdStatus = (TextView) findViewById(R.id.hold_status);
@@ -68,6 +78,29 @@ public final class SettingsActivity extends AppCompatActivity {
             @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 Prefs.setModeKeyEnabled(SettingsActivity.this, isChecked);
                 refreshKeyControls();
+            }
+        });
+        notificationFeedback.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (refreshingNotificationFeedback) return;
+                if (!isChecked) {
+                    Prefs.setNotificationFeedbackEnabled(SettingsActivity.this, false);
+                    refreshNotificationFeedback();
+                    return;
+                }
+                Prefs.setNotificationFeedbackEnabled(SettingsActivity.this, true);
+                if (FeedbackNotifications.areAllowed(SettingsActivity.this)) {
+                    refreshNotificationFeedback();
+                } else {
+                    FeedbackNotifications.requestOrOpenSettings(SettingsActivity.this);
+                    refreshNotificationFeedback();
+                }
+            }
+        });
+        vibrationFeedback.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Prefs.setVibrationFeedbackEnabled(SettingsActivity.this, isChecked);
+                refreshVibrationFeedback();
             }
         });
         findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
@@ -101,9 +134,6 @@ public final class SettingsActivity extends AppCompatActivity {
                 startActivity(new Intent(SettingsActivity.this, AboutActivity.class));
             }
         });
-        findViewById(R.id.open_github).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View view) { AppLinks.openProject(SettingsActivity.this); }
-        });
         refreshState();
     }
 
@@ -116,6 +146,17 @@ public final class SettingsActivity extends AppCompatActivity {
         handler.removeCallbacks(capturePoll);
         closeCaptureDialog();
         super.onDestroy();
+    }
+
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                                     int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode != FeedbackNotifications.REQUEST_CODE) return;
+        boolean granted = grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+        if (!granted) Ui.toast(this, getString(R.string.notification_permission_denied));
+        refreshNotificationFeedback();
+        refreshVibrationFeedback();
     }
 
     @Override public boolean dispatchKeyEvent(KeyEvent event) {
@@ -156,6 +197,8 @@ public final class SettingsActivity extends AppCompatActivity {
         boolean enabled = Prefs.isModeKeyEnabled(this);
         if (modeKeyEnabled.isChecked() != enabled) modeKeyEnabled.setChecked(enabled);
         refreshKeyControls();
+        refreshNotificationFeedback();
+        refreshVibrationFeedback();
         switchKeyStatus.setText(getString(R.string.switch_key_value,
                 Prefs.bindingLabel(this, Prefs.getSwitchBinding(this))));
         holdStatus.setText(getString(R.string.hold_duration_value, Integer.valueOf(Prefs.getHoldMs(this))));
@@ -173,6 +216,28 @@ public final class SettingsActivity extends AppCompatActivity {
         holdStatus.setAlpha(enabled ? 1f : 0.45f);
         changeSwitchKey.setAlpha(enabled ? 1f : 0.45f);
         changeHold.setAlpha(enabled ? 1f : 0.45f);
+    }
+
+    private void refreshNotificationFeedback() {
+        if (notificationFeedback == null || notificationFeedbackSummary == null) return;
+        boolean preferred = Prefs.isNotificationFeedbackEnabled(this);
+        boolean allowed = FeedbackNotifications.areAllowed(this);
+        refreshingNotificationFeedback = true;
+        notificationFeedback.setChecked(preferred && allowed);
+        refreshingNotificationFeedback = false;
+        notificationFeedbackSummary.setText(!preferred
+                ? R.string.notification_feedback_disabled_summary
+                : allowed ? R.string.notification_feedback_enabled_summary
+                : R.string.notification_feedback_permission_summary);
+    }
+
+    private void refreshVibrationFeedback() {
+        if (vibrationFeedback == null || vibrationFeedbackSummary == null) return;
+        boolean enabled = Prefs.isVibrationFeedbackEnabled(this);
+        if (vibrationFeedback.isChecked() != enabled) vibrationFeedback.setChecked(enabled);
+        vibrationFeedbackSummary.setText(enabled
+                ? R.string.vibration_feedback_enabled_summary
+                : R.string.vibration_feedback_disabled_summary);
     }
 
     private void refreshLanguage() {

@@ -46,6 +46,8 @@ The accessibility service requests key-event filtering only. It does not retriev
 
 - `MODIFY_AUDIO_SETTINGS` adjusts the primary media volume.
 - `VIBRATE` provides mode-change feedback.
+- `POST_NOTIFICATIONS` allows mode and secondary-volume feedback to remain visible in the background.
+- `INTERNET` is used only when the user manually checks the latest GitHub Release.
 - Lite requests modify-system-settings access for its compatibility backend.
 - Standard requests Shizuku permission for the secondary-volume UserService.
 
@@ -94,6 +96,8 @@ Run static checks with:
 ```bash
 ./gradlew lintLiteDebug lintStandardDebug
 ```
+
+The app version has a single source of truth in `app/build.gradle.kts`: increment `versionCode` for every published build and set the user-facing `versionName`. A release tag should match it with a `v` prefix, for example `versionName = "0.2.0"` and tag `v0.2.0`.
 
 ## License
 

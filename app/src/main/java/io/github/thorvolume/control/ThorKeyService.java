@@ -183,7 +183,10 @@ public final class ThorKeyService extends AccessibilityService {
     }
 
     private void giveModeFeedback(int mode) {
-        Ui.toast(this, getString(R.string.mode_changed, Prefs.modeLabel(this, mode)));
+        if (FeedbackNotifications.shouldShowFeedback(this)) {
+            Ui.toast(this, getString(R.string.mode_changed, Prefs.modeLabel(this, mode)));
+        }
+        if (!Prefs.isVibrationFeedbackEnabled(this)) return;
         try {
             // 用 1、2、3 段振动分别表示主屏、副屏和联动，便于不看屏幕操作。
             Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);

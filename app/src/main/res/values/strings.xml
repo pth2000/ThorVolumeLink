@@ -5,7 +5,6 @@
     <string name="app_title">Thor Volume Link</string>
     <string name="app_subtitle">Dual-screen volume routing and synchronization for AYN Thor.</string>
     <string name="service_description">Handles the mode-switch key and volume keys to control the primary screen, secondary screen, or both. The service does not inspect screen content.</string>
-    <string name="version_name">0.1.0</string>
 
     <string name="section_status">Service status</string>
     <string name="status_description">Enable the key service and authorize the volume backend before using hardware-key control.</string>
@@ -37,8 +36,8 @@
     <string name="volume_step_value">Adjustment step\n%1$d level(s)</string>
     <string name="change">Change</string>
     <string name="adjust">Adjust</string>
-    <string name="reset_controls">Restore default key settings</string>
-    <string name="controls_reset">Default key settings restored</string>
+    <string name="reset_controls">Restore default control settings</string>
+    <string name="controls_reset">Default control settings restored</string>
     <string name="key_capture_title">Set mode key</string>
     <string name="key_capture_message">Press the hardware key to use. Back, Home, and Recents retain their short-press actions. Other keys are reserved by this app. Volume keys cannot be selected.</string>
     <string name="key_capture_accessibility_hint">Enable the key service first for reliable key detection.</string>
@@ -107,7 +106,7 @@
     <string name="error_begin_capture">Starting key capture failed</string>
     <string name="error_save_hold">Saving the long-press threshold failed</string>
     <string name="error_save_step">Saving the adjustment step failed</string>
-    <string name="error_reset_controls">Restoring key settings failed</string>
+    <string name="error_reset_controls">Restoring control settings failed</string>
     <string name="error_toast">Displaying a message failed</string>
     <string name="error_read_main">Reading primary volume failed</string>
     <string name="error_read_main_max">Reading the primary volume range failed</string>
@@ -126,12 +125,24 @@
     <string name="first_use_description">After configuring volume access and enabling the key service, review Key &amp; controls to choose whether a hardware key should switch modes.</string>
     <string name="open_key_controls">Open Key &amp; controls</string>
     <string name="not_now">Not now</string>
-    <string name="settings_subtitle">Key behavior, language, appearance, and project information.</string>
+    <string name="settings_subtitle">Key behavior, feedback, language, appearance, and app information.</string>
     <string name="section_key_controls">Key &amp; controls</string>
+    <string name="group_mode_switch">Mode switching</string>
+    <string name="group_volume_adjustment">Volume adjustment</string>
     <string name="mode_key_enabled">Use a hardware key to switch modes</string>
     <string name="mode_key_enabled_summary">Long-press the configured key to cycle through Primary, Secondary, and Linked.</string>
     <string name="mode_key_disabled_summary">Modes can be changed only from the app. The configured key keeps its original system behavior.</string>
     <string name="section_general">General</string>
+    <string name="section_key_feedback">Key feedback</string>
+    <string name="notification_feedback">Notification feedback</string>
+    <string name="notification_feedback_enabled_summary">Show mode changes and secondary-volume values; background display requires notification access.</string>
+    <string name="notification_feedback_disabled_summary">Mode-change and secondary-volume notifications are turned off.</string>
+    <string name="notification_feedback_permission_summary">Notification permission is required to show feedback in the background.</string>
+    <string name="vibration_feedback">Vibration feedback</string>
+    <string name="vibration_feedback_enabled_summary">Use distinct vibration patterns to identify the selected mode.</string>
+    <string name="vibration_feedback_disabled_summary">Mode-change vibration is turned off.</string>
+    <string name="notification_permission_denied">Notification permission was not granted. Background feedback remains off.</string>
+    <string name="notification_settings_failed">Unable to open notification settings</string>
     <string name="language">Language</string>
     <string name="language_system">Follow system</string>
     <string name="language_chinese">简体中文</string>
@@ -141,11 +152,30 @@
     <string name="night_light">Light</string>
     <string name="night_dark">Dark</string>
     <string name="setting_value">%1$s\n%2$s</string>
-    <string name="section_project">Project</string>
+    <string name="section_about">About</string>
     <string name="about_project">About Thor Volume Link</string>
-    <string name="github_repository">GitHub repository</string>
+    <string name="check_updates">Check for updates</string>
+    <string name="checking_updates">Checking…</string>
+    <string name="update_available">Update available</string>
+    <string name="update_is_latest">You’re up to date</string>
+    <string name="update_installed_version">Installed version: %1$s</string>
+    <string name="update_latest_installed">This is the latest version available.</string>
+    <string name="update_status_ready">Check GitHub Releases for a newer version.</string>
+    <string name="update_status_checking">Contacting GitHub Releases…</string>
+    <string name="update_status_latest">%1$s is the latest version.</string>
+    <string name="update_status_available">%1$s is available to download.</string>
+    <string name="update_status_failed">The last update check failed.</string>
+    <string name="update_check_failed">Unable to check for updates</string>
+    <string name="update_no_release">No published GitHub Release was found.</string>
+    <string name="update_http_error">GitHub returned HTTP %1$d.</string>
+    <string name="update_invalid_response">GitHub returned an invalid Release response.</string>
+    <string name="update_network_error">Check your internet connection and try again.</string>
+    <string name="view_release">View Release</string>
+    <string name="later">Later</string>
     <string name="project_description">An independent, open-source dual-screen volume controller for AYN Thor.</string>
     <string name="about_version">Version %1$s · %2$s</string>
+    <string name="section_updates">Updates</string>
+    <string name="source_code_title">Source code</string>
     <string name="source_code_description">Source code, releases, and issue tracking.</string>
     <string name="license_title">Open-source license</string>
     <string name="license_name">MIT License</string>
@@ -157,6 +187,11 @@
     <string name="link_open_failed">Unable to open the link.</string>
     <string name="error_open_link">Opening project link failed</string>
     <string name="error_save_mode_key_enabled">Saving the mode-key setting failed</string>
+    <string name="error_save_notification_feedback">Saving the background-feedback setting failed</string>
+    <string name="error_save_vibration_feedback">Saving the vibration-feedback setting failed</string>
+    <string name="error_open_notification_settings">Opening notification settings failed</string>
     <string name="error_save_night_mode">Saving the appearance setting failed</string>
     <string name="project_url" translatable="false">https://github.com/pth2000/ThorVolumeLink</string>
+    <string name="release_api_url" translatable="false">https://api.github.com/repos/pth2000/ThorVolumeLink/releases/latest</string>
+    <string name="latest_release_url" translatable="false">https://github.com/pth2000/ThorVolumeLink/releases/latest</string>
 </resources>

@@ -46,6 +46,8 @@ Lite 在较新的 Android 系统上可能出现旧版应用提示或安装限制
 
 - `MODIFY_AUDIO_SETTINGS`：调整主屏媒体音量。
 - `VIBRATE`：在模式变化时提供振动反馈。
+- `POST_NOTIFICATIONS`：让模式和副屏音量反馈可在应用后台显示。
+- `INTERNET`：仅在用户手动检查 GitHub 最新 Release 时使用。
 - Lite：请求修改系统设置权限，以使用兼容后端。
 - Standard：请求 Shizuku 权限，以运行副屏音量 UserService。
 
@@ -94,6 +96,8 @@ app/build/outputs/apk/standard/debug/
 ```bash
 ./gradlew lintLiteDebug lintStandardDebug
 ```
+
+应用版本号只有一处配置来源，即 `app/build.gradle.kts`：每次正式发布都应递增 `versionCode`，并修改面向用户显示的 `versionName`。Release 标签应在同一版本号前加 `v`，例如 `versionName = "0.2.0"` 对应标签 `v0.2.0`。
 
 ## 开源许可证
 

@@ -9,8 +9,21 @@ final class AppLinks {
     private AppLinks() {}
 
     static void openProject(Activity activity) {
+        open(activity, activity.getString(R.string.project_url));
+    }
+
+    static void openRelease(Activity activity, String url) {
+        Uri parsed = Uri.parse(url == null ? "" : url);
+        boolean trusted = "https".equalsIgnoreCase(parsed.getScheme())
+                && "github.com".equalsIgnoreCase(parsed.getHost())
+                && parsed.getPath() != null
+                && parsed.getPath().startsWith("/pth2000/ThorVolumeLink/releases/");
+        open(activity, trusted ? url : activity.getString(R.string.latest_release_url));
+    }
+
+    private static void open(Activity activity, String url) {
         try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(activity.getString(R.string.project_url)));
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addCategory(Intent.CATEGORY_BROWSABLE);
             activity.startActivity(intent);
         } catch (Throwable error) {
