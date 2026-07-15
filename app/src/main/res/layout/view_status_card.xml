@@ -44,11 +44,19 @@
         android:text="@string/status_checking" />
 
     <Button
+        android:id="@+id/change_backend"
+        style="@style/ButtonOutline"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="14dp"
+        android:text="@string/backend_method" />
+
+    <Button
         android:id="@+id/request_authorization"
         style="@style/ButtonFilled"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="8dp"
         android:text="@string/request_authorization" />
 
     <Button

@@ -21,14 +21,24 @@ import java.util.concurrent.Executors;
  */
 final class EditionBackend {
     /** AYN 固件保存副屏音量的系统设置键，合法值为 0～15。 */
-    private static final String KEY = "secondary_screen_volume_level";
+    private static final String KEY = VolumeControl.SECONDARY_SETTING_KEY;
     /** 所有完成回调都切回主线程，保证上层可以安全更新 UI。 */
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final ExecutorService WORKER = Executors.newSingleThreadExecutor();
 
     private EditionBackend() {}
 
-    static boolean usesShizuku() { return false; }
+    static boolean supportsBackendSelection() { return false; }
+
+    static int selectedBackend(Context context) { return Prefs.PRIVILEGED_BACKEND_SHIZUKU; }
+
+    static String selectedBackendLabel(Context context) { return context.getString(R.string.edition_name); }
+
+    static void selectBackend(Context context, int backend) {
+        // Lite 始终使用 WRITE_SETTINGS 兼容后端，不参与特权后端选择。
+    }
+
+    static String dependencySummary(Context context) { return ""; }
 
     static String backendStatus(Context context) {
         return context.getString(R.string.backend_lite_ready);
@@ -84,7 +94,7 @@ final class EditionBackend {
         WORKER.execute(new Runnable() {
             @Override public void run() {
                 try {
-                    int value = clamp(Settings.System.getInt(context.getContentResolver(), KEY, 0));
+                    int value = clamp(Settings.System.getInt(context.getContentResolver(), KEY));
                     complete(callback, true, value, "");
                 } catch (Throwable error) {
                     complete(callback, false, 0, format(error));

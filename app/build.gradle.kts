@@ -106,5 +106,6 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.7.1")
     add("standardImplementation", "dev.rikka.shizuku:api:13.1.5")
     add("standardImplementation", "dev.rikka.shizuku:provider:13.1.5")
+    add("standardImplementation", "com.github.topjohnwu.libsu:core:6.0.0")
     add("standardCompileOnly", "androidx.annotation:annotation:1.3.0")
 }

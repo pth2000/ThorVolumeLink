@@ -10,6 +10,15 @@
     <string name="status_description">完成音量接口授权并启用按键服务后，即可使用实体按键控制。</string>
     <string name="status_checking">正在检查…</string>
     <string name="request_authorization">配置音量接口</string>
+    <string name="backend_method">授权方式</string>
+    <string name="backend_method_value">授权方式 · %1$s</string>
+    <string name="backend_method_title">选择授权方式</string>
+    <string name="backend_method_shizuku">Shizuku</string>
+    <string name="backend_method_root">Root</string>
+    <string name="root_mode_title">使用 Root 权限？</string>
+    <string name="root_mode_message">Root 会授予应用较高的系统权限。Thor Volume Link 仅用它读写 secondary_screen_volume_level。选择 Root 后，应用不会再使用 Shizuku。</string>
+    <string name="use_root">使用 Root</string>
+    <string name="apply">应用</string>
     <string name="open_accessibility">按键服务设置</string>
     <string name="accessibility_enabled">按键服务 · 已启用</string>
     <string name="accessibility_disabled">按键服务 · 未启用</string>
@@ -58,7 +67,7 @@
     <string name="secondary_volume">副屏音量</string>
     <string name="main_volume_value">主屏媒体音量\n%1$d / %2$d</string>
     <string name="secondary_volume_value">副屏音量\n%1$d / 15</string>
-    <string name="secondary_unavailable">副屏音量\n控制接口不可用</string>
+    <string name="secondary_unavailable">副屏音量\n未检测到设备接口</string>
     <string name="secondary_waiting_authorization">副屏音量\n等待授权</string>
     <string name="secondary_reading">副屏音量\n正在读取…</string>
     <string name="secondary_read_failed">副屏音量\n读取失败</string>
@@ -88,6 +97,14 @@
     <string name="authorization_shizuku_missing">Shizuku 权限 · 未授予</string>
     <string name="authorization_shizuku_recheck">重新检查 Shizuku 权限</string>
     <string name="authorization_shizuku_grant">授予 Shizuku 权限</string>
+    <string name="backend_root_ready">Root 后端 · 可用</string>
+    <string name="backend_root_inactive">Root 后端 · 未授权</string>
+    <string name="authorization_root_granted">Root 权限 · 已授予</string>
+    <string name="authorization_root_missing">Root 权限 · 未授予</string>
+    <string name="authorization_root_recheck">重新检查 Root 权限</string>
+    <string name="authorization_root_grant">授予 Root 权限</string>
+    <string name="root_permission_denied">未获得 Root 权限。</string>
+    <string name="backend_changed">授权方式已切换</string>
     <string name="shizuku_not_running">Shizuku 尚未连接，请先启动 Shizuku。</string>
     <string name="shizuku_permission_denied">未授予 Shizuku 权限。</string>
     <string name="shizuku_service_unavailable">Shizuku 音量服务不可用。</string>
@@ -98,6 +115,7 @@
     <string name="authorization_settings_missing">修改系统设置 · 未允许</string>
     <string name="authorization_settings_review">查看修改系统设置权限</string>
     <string name="authorization_settings_allow">允许修改系统设置</string>
+    <string name="error_save_privileged_backend">无法保存授权方式</string>
 
     <string name="footer_text">%1$s · %2$s · %3$s</string>
 
@@ -112,6 +130,7 @@
     <string name="error_read_main_max">读取主屏音量范围失败</string>
     <string name="error_adjust_main">调整主屏音量失败</string>
     <string name="error_write_secondary">写入副屏音量失败</string>
+    <string name="error_read_secondary">读取副屏音量失败</string>
     <string name="error_switch_mode">切换音量键模式失败</string>
     <string name="error_key_event">处理实体按键失败（keyCode=%1$d）</string>
     <string name="error_vibration">触觉反馈失败</string>

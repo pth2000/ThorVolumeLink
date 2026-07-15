@@ -1,6 +1,7 @@
 package io.github.thorvolume.control;
 
 import android.content.Intent;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -10,6 +11,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
 
 import java.util.Locale;
 
@@ -28,6 +30,7 @@ public final class MainActivity extends AppCompatActivity {
     private TextView secondaryVolumeStatus;
     private TextView errorStatus;
     private View firstUseCard;
+    private Button changeBackend;
     private Button requestAuthorization;
     private Button openAccessibility;
     private Button modeMain;
@@ -37,6 +40,8 @@ public final class MainActivity extends AppCompatActivity {
     private boolean resumed;
     private boolean secondaryReadInFlight;
     private boolean secondaryHasValue;
+    /** null 表示本次前台会话尚未探测；false 时停止实时读取轮询。 */
+    private Boolean secondarySettingAvailable;
 
     private final BackendStatusListener backendListener = new BackendStatusListener() {
         @Override public void onStatusChanged() {
@@ -66,6 +71,7 @@ public final class MainActivity extends AppCompatActivity {
         secondaryVolumeStatus = (TextView) findViewById(R.id.secondary_volume_status);
         errorStatus = (TextView) findViewById(R.id.error_status);
         firstUseCard = findViewById(R.id.first_use_card);
+        changeBackend = (Button) findViewById(R.id.change_backend);
         requestAuthorization = (Button) findViewById(R.id.request_authorization);
         openAccessibility = (Button) findViewById(R.id.open_accessibility);
         modeMain = (Button) findViewById(R.id.mode_main);
@@ -89,6 +95,9 @@ public final class MainActivity extends AppCompatActivity {
         });
         requestAuthorization.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { requestAuthorization(); }
+        });
+        changeBackend.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { showBackendSelector(); }
         });
         openAccessibility.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { openAccessibilitySettings(); }
@@ -117,6 +126,7 @@ public final class MainActivity extends AppCompatActivity {
     @Override protected void onResume() {
         super.onResume();
         resumed = true;
+        secondarySettingAvailable = null;
         SecondaryVolumeGateway.setStatusListener(backendListener);
         handler.removeCallbacks(liveRefresh);
         refreshAll();
@@ -145,6 +155,66 @@ public final class MainActivity extends AppCompatActivity {
                 refreshAll();
             }
         });
+    }
+
+    /** Standard 版只保存并使用一个特权后端；Lite 版不会显示此入口。 */
+    private void showBackendSelector() {
+        if (!SecondaryVolumeGateway.supportsBackendSelection()) return;
+        final int current = SecondaryVolumeGateway.selectedBackend(this);
+        final String[] methods = new String[] {
+                getString(R.string.backend_method_shizuku),
+                getString(R.string.backend_method_root)
+        };
+        final AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.backend_method_title)
+                .setSingleChoiceItems(methods,
+                        current == Prefs.PRIVILEGED_BACKEND_ROOT ? 1 : 0,
+                        null)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.apply, null)
+                .create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override public void onShow(DialogInterface ignored) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(
+                        new View.OnClickListener() {
+                            @Override public void onClick(View view) {
+                                int checked = dialog.getListView().getCheckedItemPosition();
+                                int selected = checked == 1
+                                        ? Prefs.PRIVILEGED_BACKEND_ROOT
+                                        : Prefs.PRIVILEGED_BACKEND_SHIZUKU;
+                                dialog.dismiss();
+                                if (selected == current) return;
+                                if (selected == Prefs.PRIVILEGED_BACKEND_ROOT) {
+                                    confirmRootSelection();
+                                } else {
+                                    SecondaryVolumeGateway.selectBackend(
+                                            MainActivity.this, selected);
+                                    secondaryHasValue = false;
+                                    refreshAll();
+                                }
+                            }
+                        });
+            }
+        });
+        dialog.show();
+    }
+
+    private void confirmRootSelection() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.root_mode_title)
+                .setMessage(R.string.root_mode_message)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.use_root, new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        SecondaryVolumeGateway.selectBackend(MainActivity.this,
+                                Prefs.PRIVILEGED_BACKEND_ROOT);
+                        secondaryHasValue = false;
+                        refreshAll();
+                        // 仅在用户确认 Root 后主动触发 su 授权。
+                        requestAuthorization();
+                    }
+                })
+                .show();
     }
 
     private void openAccessibilitySettings() {
@@ -183,6 +253,13 @@ public final class MainActivity extends AppCompatActivity {
         authorizationStatus.setBackgroundResource(authorization ? R.drawable.status_ok : R.drawable.status_warn);
         accessibilityStatus.setText(serviceEnabled ? R.string.accessibility_enabled : R.string.accessibility_disabled);
         accessibilityStatus.setBackgroundResource(serviceEnabled ? R.drawable.status_ok : R.drawable.status_warn);
+        if (SecondaryVolumeGateway.supportsBackendSelection()) {
+            changeBackend.setText(getString(R.string.backend_method_value,
+                    SecondaryVolumeGateway.selectedBackendLabel(this)));
+            changeBackend.setVisibility(View.VISIBLE);
+        } else {
+            changeBackend.setVisibility(View.GONE);
+        }
         requestAuthorization.setText(SecondaryVolumeGateway.authorizationActionLabel(this));
         requestAuthorization.setVisibility(authorization ? View.GONE : View.VISIBLE);
         openAccessibility.setText(serviceEnabled ? R.string.view_accessibility : R.string.enable_accessibility);
@@ -210,18 +287,14 @@ public final class MainActivity extends AppCompatActivity {
         int max = VolumeControl.mainMax(this);
         mainVolumeStatus.setText(getString(R.string.main_volume_value, Integer.valueOf(main), Integer.valueOf(max)));
 
-        boolean backendAvailable = SecondaryVolumeGateway.isBackendAvailable(this);
-        boolean authorization = SecondaryVolumeGateway.hasAuthorization(this);
-        if (!backendAvailable) {
+        if (secondarySettingAvailable == null) {
+            secondarySettingAvailable = Boolean.valueOf(
+                    VolumeControl.hasSecondarySetting(this));
+        }
+        if (!secondarySettingAvailable.booleanValue()) {
             secondaryReadInFlight = false;
             secondaryHasValue = false;
             secondaryVolumeStatus.setText(R.string.secondary_unavailable);
-            return;
-        }
-        if (!authorization) {
-            secondaryReadInFlight = false;
-            secondaryHasValue = false;
-            secondaryVolumeStatus.setText(R.string.secondary_waiting_authorization);
             return;
         }
         if (secondaryReadInFlight) return;
@@ -236,6 +309,10 @@ public final class MainActivity extends AppCompatActivity {
                     secondaryVolumeStatus.setText(getString(R.string.secondary_volume_value, Integer.valueOf(value)));
                 } else {
                     secondaryHasValue = false;
+                    // 设置项可能在应用运行期间被移除；确认后停止本次会话的轮询。
+                    if (!VolumeControl.hasSecondarySetting(MainActivity.this)) {
+                        secondarySettingAvailable = Boolean.FALSE;
+                    }
                     secondaryVolumeStatus.setText(R.string.secondary_read_failed);
                 }
             }

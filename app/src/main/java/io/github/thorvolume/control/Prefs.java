@@ -25,6 +25,9 @@ final class Prefs {
     static final int NIGHT_LIGHT = 1;
     static final int NIGHT_DARK = 2;
 
+    static final int PRIVILEGED_BACKEND_SHIZUKU = 0;
+    static final int PRIVILEGED_BACKEND_ROOT = 1;
+
     private static final String FILE = "thor_volume_control";
     private static final String KEY_MODE = "mode";
     private static final String KEY_HOLD_MS = "hold_ms";
@@ -39,6 +42,7 @@ final class Prefs {
     private static final String KEY_VIBRATION_FEEDBACK_CONFIGURED = "vibration_feedback_configured";
     private static final String KEY_NIGHT_MODE = "night_mode";
     private static final String KEY_ONBOARDING_SEEN = "onboarding_seen";
+    private static final String KEY_PRIVILEGED_BACKEND = "privileged_backend";
 
     /** 模式切换键绑定；优先使用设备扫描码，以兼容厂商自定义实体键。 */
     static final class Binding {
@@ -297,6 +301,28 @@ final class Prefs {
             prefs(context).edit().putInt(KEY_NIGHT_MODE, safe).apply();
         } catch (Throwable error) {
             recordError(context, context.getString(R.string.error_save_night_mode), error);
+        }
+    }
+
+    /** Standard 版当前使用的唯一特权后端；旧版本默认保持 Shizuku。 */
+    static int getPrivilegedBackend(Context context) {
+        try {
+            int value = prefs(context).getInt(KEY_PRIVILEGED_BACKEND,
+                    PRIVILEGED_BACKEND_SHIZUKU);
+            return value == PRIVILEGED_BACKEND_ROOT
+                    ? PRIVILEGED_BACKEND_ROOT : PRIVILEGED_BACKEND_SHIZUKU;
+        } catch (Throwable ignored) {
+            return PRIVILEGED_BACKEND_SHIZUKU;
+        }
+    }
+
+    static void setPrivilegedBackend(Context context, int backend) {
+        int safe = backend == PRIVILEGED_BACKEND_ROOT
+                ? PRIVILEGED_BACKEND_ROOT : PRIVILEGED_BACKEND_SHIZUKU;
+        try {
+            prefs(context).edit().putInt(KEY_PRIVILEGED_BACKEND, safe).apply();
+        } catch (Throwable error) {
+            recordError(context, context.getString(R.string.error_save_privileged_backend), error);
         }
     }
 

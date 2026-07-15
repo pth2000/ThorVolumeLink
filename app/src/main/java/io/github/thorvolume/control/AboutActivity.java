@@ -24,6 +24,12 @@ public final class AboutActivity extends AppCompatActivity {
 
         ((TextView) findViewById(R.id.version)).setText(getString(
                 R.string.about_version, BuildConfig.VERSION_NAME, getString(R.string.edition_name)));
+        TextView dependencies = (TextView) findViewById(R.id.dependencies);
+        String dependencySummary = SecondaryVolumeGateway.dependencySummary(this);
+        if (dependencySummary != null && dependencySummary.length() > 0) {
+            dependencies.setText(dependencySummary);
+            dependencies.setVisibility(View.VISIBLE);
+        }
         findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { finish(); }
         });

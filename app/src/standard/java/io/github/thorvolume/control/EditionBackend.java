@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.provider.Settings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,10 +27,12 @@ import rikka.shizuku.Shizuku;
  * 本类只保留业务层需要的状态转换、请求排队和线程切换。</p>
  */
 final class EditionBackend {
+    private static final String SECONDARY_VOLUME_KEY = VolumeControl.SECONDARY_SETTING_KEY;
     private static final int REQUEST_CODE = 9417;
-    private static final int OPERATION_READ = 0;
     private static final int OPERATION_SET = 1;
     private static final int OPERATION_ADJUST = 2;
+    /** UserService 实现变化时递增，确保同 versionCode 的开发包也会替换旧 daemon。 */
+    private static final int USER_SERVICE_IMPLEMENTATION_VERSION = 2;
 
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final ExecutorService WORKER = Executors.newSingleThreadExecutor();
@@ -41,6 +44,8 @@ final class EditionBackend {
     private static Shizuku.UserServiceArgs userServiceArgs;
     private static boolean bindingUserService;
     private static String permissionDeniedMessage = "";
+    /** 防止切换瞬间迟到的 ServiceConnection 回调重新挂回已释放的 Shizuku 服务。 */
+    private static volatile boolean shizukuSelected = true;
     private static volatile BackendStatusListener statusListener;
 
     private interface ServiceReadyCallback {
@@ -77,6 +82,18 @@ final class EditionBackend {
 
     private static final ServiceConnection USER_SERVICE_CONNECTION = new ServiceConnection() {
         @Override public void onServiceConnected(ComponentName name, IBinder binder) {
+            if (!shizukuSelected) {
+                Shizuku.UserServiceArgs args;
+                synchronized (LOCK) {
+                    args = userServiceArgs;
+                }
+                if (args != null) {
+                    try {
+                        Shizuku.unbindUserService(args, USER_SERVICE_CONNECTION, true);
+                    } catch (Throwable ignored) {}
+                }
+                return;
+            }
             ISecondaryVolumeService service = ISecondaryVolumeService.Stub.asInterface(binder);
             synchronized (LOCK) {
                 volumeService = service;
@@ -101,21 +118,55 @@ final class EditionBackend {
 
     private EditionBackend() {}
 
-    static boolean usesShizuku() {
-        return true;
+    static boolean supportsBackendSelection() { return true; }
+
+    static int selectedBackend(Context context) {
+        return Prefs.getPrivilegedBackend(context);
+    }
+
+    static String selectedBackendLabel(Context context) {
+        return context.getString(isRootSelected(context)
+                ? R.string.backend_method_root : R.string.backend_method_shizuku);
+    }
+
+    /**
+     * 切换后端时先保存唯一选项，再释放旧后端，确保后续请求不会同时走两条路径。
+     */
+    static void selectBackend(Context context, int backend) {
+        int next = backend == Prefs.PRIVILEGED_BACKEND_ROOT
+                ? Prefs.PRIVILEGED_BACKEND_ROOT : Prefs.PRIVILEGED_BACKEND_SHIZUKU;
+        int previous = Prefs.getPrivilegedBackend(context);
+        if (previous == next) return;
+
+        Prefs.setPrivilegedBackend(context, next);
+        shizukuSelected = next == Prefs.PRIVILEGED_BACKEND_SHIZUKU;
+        if (previous == Prefs.PRIVILEGED_BACKEND_ROOT) RootBackend.release();
+        else releaseShizuku();
+        notifyStatus();
+    }
+
+    static String dependencySummary(Context context) {
+        return context.getString(R.string.standard_dependencies);
     }
 
     static String backendStatus(Context context) {
+        if (isRootSelected(context)) return RootBackend.backendStatus(context);
         return context.getString(Shizuku.pingBinder()
                 ? R.string.backend_shizuku_connected
                 : R.string.backend_shizuku_disconnected);
     }
 
     static boolean isBackendAvailable(Context context) {
+        if (isRootSelected(context)) return RootBackend.isBackendAvailable(context);
         return Shizuku.pingBinder();
     }
 
     static boolean hasAuthorization(Context context) {
+        if (isRootSelected(context)) return RootBackend.hasAuthorization(context);
+        return hasShizukuAuthorization();
+    }
+
+    private static boolean hasShizukuAuthorization() {
         if (!Shizuku.pingBinder()) return false;
         try {
             return Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED;
@@ -125,23 +176,34 @@ final class EditionBackend {
     }
 
     static String authorizationStatus(Context context) {
-        return context.getString(hasAuthorization(context)
+        if (isRootSelected(context)) return RootBackend.authorizationStatus(context);
+        return context.getString(hasShizukuAuthorization()
                 ? R.string.authorization_shizuku_granted
                 : R.string.authorization_shizuku_missing);
     }
 
     static String authorizationActionLabel(Context context) {
-        return context.getString(hasAuthorization(context)
+        if (isRootSelected(context)) return RootBackend.authorizationActionLabel(context);
+        return context.getString(hasShizukuAuthorization()
                 ? R.string.authorization_shizuku_recheck
                 : R.string.authorization_shizuku_grant);
     }
 
     static void requestAuthorization(final Activity activity, final SecondaryVolumeCallback callback) {
+        if (isRootSelected(activity)) {
+            RootBackend.requestAuthorization(activity, callback);
+            return;
+        }
+        requestShizukuAuthorization(activity, callback);
+    }
+
+    private static void requestShizukuAuthorization(final Activity activity,
+                                                     final SecondaryVolumeCallback callback) {
         if (!Shizuku.pingBinder()) {
             complete(callback, false, 0, activity.getString(R.string.shizuku_not_running));
             return;
         }
-        if (hasAuthorization(activity)) {
+        if (hasShizukuAuthorization()) {
             complete(callback, true, 0, "");
             return;
         }
@@ -163,22 +225,51 @@ final class EditionBackend {
 
     static void setStatusListener(BackendStatusListener listener) {
         statusListener = listener;
+        RootBackend.setStatusListener(listener);
     }
 
     static void read(final Context context, final SecondaryVolumeCallback callback) {
-        run(context, OPERATION_READ, 0, callback);
+        if (isRootSelected(context)) RootBackend.read(context, callback);
+        else readDirect(context, callback);
     }
 
     static void set(final Context context, int value, final SecondaryVolumeCallback callback) {
-        run(context, OPERATION_SET, clamp(value), callback);
+        if (isRootSelected(context)) RootBackend.set(context, value, callback);
+        else runShizuku(context, OPERATION_SET, clamp(value), callback);
     }
 
     static void adjust(final Context context, int delta, final SecondaryVolumeCallback callback) {
-        run(context, OPERATION_ADJUST, delta, callback);
+        if (isRootSelected(context)) RootBackend.adjust(context, delta, callback);
+        else runShizuku(context, OPERATION_ADJUST, delta, callback);
     }
 
-    private static void run(final Context context, final int operation, final int argument,
-                            final SecondaryVolumeCallback callback) {
+    /** 读取 Settings.System 不需要 Shizuku 授权，且会自动对应应用当前用户。 */
+    private static void readDirect(final Context context,
+                                   final SecondaryVolumeCallback callback) {
+        final Context app = context.getApplicationContext();
+        WORKER.execute(new Runnable() {
+            @Override public void run() {
+                if (isRootSelected(app)) {
+                    complete(callback, false, 0, app.getString(R.string.backend_changed));
+                    return;
+                }
+                try {
+                    int value = Settings.System.getInt(app.getContentResolver(),
+                            SECONDARY_VOLUME_KEY);
+                    complete(callback, true, clamp(value), "");
+                } catch (Throwable error) {
+                    complete(callback, false, 0, SecondaryVolumeResult.format(error));
+                }
+            }
+        });
+    }
+
+    private static void runShizuku(final Context context, final int operation, final int argument,
+                                   final SecondaryVolumeCallback callback) {
+        if (isRootSelected(context)) {
+            complete(callback, false, 0, context.getString(R.string.backend_changed));
+            return;
+        }
         ensureVolumeService(context, new ServiceReadyCallback() {
             @Override public void onReady(boolean ready, String error) {
                 if (!ready) {
@@ -187,6 +278,11 @@ final class EditionBackend {
                 }
                 WORKER.execute(new Runnable() {
                     @Override public void run() {
+                        if (isRootSelected(context)) {
+                            complete(callback, false, 0,
+                                    context.getString(R.string.backend_changed));
+                            return;
+                        }
                         ISecondaryVolumeService service;
                         synchronized (LOCK) {
                             service = volumeService;
@@ -197,8 +293,7 @@ final class EditionBackend {
                         }
                         try {
                             Bundle result;
-                            if (operation == OPERATION_READ) result = service.getVolume();
-                            else if (operation == OPERATION_SET) result = service.setVolume(argument);
+                            if (operation == OPERATION_SET) result = service.setVolume(argument);
                             else result = service.adjustVolume(argument);
 
                             if (SecondaryVolumeResult.isSuccess(result)) {
@@ -220,6 +315,10 @@ final class EditionBackend {
     }
 
     private static void ensureVolumeService(Context context, ServiceReadyCallback callback) {
+        if (isRootSelected(context)) {
+            postReady(callback, false, context.getString(R.string.backend_changed));
+            return;
+        }
         boolean shouldBind = false;
         String error = "";
         synchronized (LOCK) {
@@ -231,7 +330,7 @@ final class EditionBackend {
             if (bindingUserService) return;
             if (!Shizuku.pingBinder()) {
                 error = "Shizuku is not connected";
-            } else if (!hasAuthorization(context)) {
+            } else if (!hasShizukuAuthorization()) {
                 error = "Shizuku permission is not granted";
             } else {
                 bindingUserService = true;
@@ -256,7 +355,7 @@ final class EditionBackend {
     private static Shizuku.UserServiceArgs getUserServiceArgs(Context context) {
         synchronized (LOCK) {
             if (userServiceArgs != null) return userServiceArgs;
-            int version = packageVersionCode(context);
+            int version = userServiceVersion(context);
             userServiceArgs = new Shizuku.UserServiceArgs(
                     new ComponentName(context.getPackageName(), SecondaryVolumeUserService.class.getName()))
                     .processNameSuffix("thor_volume")
@@ -279,8 +378,38 @@ final class EditionBackend {
         }
     }
 
+    private static int userServiceVersion(Context context) {
+        long version = (long) packageVersionCode(context) * 1000L
+                + USER_SERVICE_IMPLEMENTATION_VERSION;
+        return (int) Math.max(1L, Math.min(Integer.MAX_VALUE, version));
+    }
+
     private static boolean isServiceAlive(ISecondaryVolumeService service) {
         return service != null && service.asBinder() != null && service.asBinder().pingBinder();
+    }
+
+    private static boolean isRootSelected(Context context) {
+        boolean root = Prefs.getPrivilegedBackend(context) == Prefs.PRIVILEGED_BACKEND_ROOT;
+        shizukuSelected = !root;
+        return root;
+    }
+
+    /** 停止并销毁旧的 Shizuku UserService，避免切到 Root 后仍保留第二条后端。 */
+    private static void releaseShizuku() {
+        Shizuku.UserServiceArgs args;
+        synchronized (LOCK) {
+            volumeService = null;
+            bindingUserService = false;
+            args = userServiceArgs;
+        }
+        dispatchReady(false, "Backend changed");
+        dispatchPermission(false, "Backend changed");
+        if (args == null || !Shizuku.pingBinder()) return;
+        try {
+            Shizuku.unbindUserService(args, USER_SERVICE_CONNECTION, true);
+        } catch (Throwable ignored) {
+            // 旧后端已经从路由中移除；解绑失败不应阻止 Root 接管。
+        }
     }
 
     private static void postReady(final ServiceReadyCallback callback,

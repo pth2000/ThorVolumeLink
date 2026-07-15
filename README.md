@@ -20,13 +20,13 @@ Thor Volume Link is an open-source volume controller for the dual-screen AYN Tho
 | Edition | Package | Minimum Android | Secondary-volume backend | Recommended for |
 | --- | --- | ---: | --- | --- |
 | Lite | `io.github.thorvolume.control.lite` | Android 5.0 / API 21 | Legacy `Settings.System` compatibility path | Recommended first; no Shizuku required |
-| Standard | `io.github.thorvolume.control` | Android 6.0 / API 23 | [Shizuku](https://shizuku.rikka.app/) UserService | Fallback when Lite is unavailable or incompatible |
+| Standard | `io.github.thorvolume.control` | Android 6.0 / API 23 | Select either [Shizuku](https://shizuku.rikka.app/) or Root | Fallback when Lite is unavailable or incompatible |
 
 Try Lite first. It only needs Android's modify-system-settings approval and does not require Shizuku installation or authorization. Lite intentionally targets SDK 22: AOSP keeps a compatibility path that lets apps targeting Android 5.1 or lower modify custom `Settings.System` entries, while apps targeting newer SDK levels are rejected. AYN's `secondary_screen_volume_level` is such a vendor-defined entry.
 
 See the relevant [AOSP SettingsProvider implementation](https://android.googlesource.com/platform/frameworks/base/+/master/packages/SettingsProvider/src/com/android/providers/settings/SettingsProvider.java) and Android's [`WRITE_SETTINGS` documentation](https://developer.android.com/reference/android/provider/Settings.System#canWrite(android.content.Context)).
 
-Lite can trigger legacy-app warnings or installation restrictions on newer Android versions. Use Standard with Shizuku if Lite cannot be installed or the compatibility path does not work on your firmware. The editions can be installed together, but do not enable both accessibility key services at the same time.
+Lite can trigger legacy-app warnings or installation restrictions on newer Android versions. Use Standard if Lite cannot be installed or the compatibility path does not work on your firmware. Standard can use either Shizuku or Root; only the method selected in the app is active. The editions can be installed together, but do not enable both accessibility key services at the same time.
 
 ## Getting started
 
@@ -36,7 +36,7 @@ Lite can trigger legacy-app warnings or installation restrictions on newer Andro
 4. Open **Settings → Key & controls** and decide whether a hardware key should switch modes.
 5. Select Primary, Secondary, or Linked on the main screen.
 
-If Lite is unavailable, install Standard, start Shizuku, and grant Thor Volume Link access when requested.
+If Lite is unavailable, install Standard and choose Shizuku or Root on the main screen. Shizuku is the default. Root is requested only after you explicitly select and confirm it; selecting Root stops the Shizuku UserService, while switching back closes the Root shell.
 
 When hardware-key mode switching is disabled, the configured mode key keeps its original system behavior. Volume Up and Volume Down continue to follow the mode selected in the app.
 
@@ -49,7 +49,7 @@ The accessibility service requests key-event filtering only. It does not retriev
 - `POST_NOTIFICATIONS` allows mode and secondary-volume feedback to remain visible in the background.
 - `INTERNET` is used only when the user manually checks the latest GitHub Release.
 - Lite requests modify-system-settings access for its compatibility backend.
-- Standard requests Shizuku permission for the secondary-volume UserService.
+- Standard requests permission from the single backend selected by the user: either Shizuku for its UserService or `su` for Root access.
 
 ## How it works
 
@@ -60,7 +60,7 @@ Settings.System: secondary_screen_volume_level
 Range: 0–15
 ```
 
-Lite accesses this setting through Android's target-SDK compatibility behavior. Standard reads and writes it through an official Shizuku UserService. Shared mode, preference, accessibility-service, and UI code lives in `app/src/main`; backend-specific code lives in `app/src/lite` and `app/src/standard`.
+Lite accesses this setting through Android's target-SDK compatibility behavior. Standard reads and writes it through either an official Shizuku UserService or a Root shell powered by [libsu](https://github.com/topjohnwu/libsu). It never uses both backends at once. Shared mode, preference, accessibility-service, and UI code lives in `app/src/main`; backend-specific code lives in `app/src/lite` and `app/src/standard`.
 
 ## Building
 
@@ -102,3 +102,5 @@ The app version has a single source of truth in `app/build.gradle.kts`: incremen
 ## License
 
 Thor Volume Link is available under the [MIT License](LICENSE).
+
+The Standard edition uses Shizuku API under the MIT License and libsu under the Apache License 2.0. See [third-party notices](docs/THIRD_PARTY_NOTICES.md).

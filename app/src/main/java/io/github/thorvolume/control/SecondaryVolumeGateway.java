@@ -13,7 +13,11 @@ import android.content.Context;
 final class SecondaryVolumeGateway {
     private SecondaryVolumeGateway() {}
 
-    static boolean usesShizuku() { return EditionBackend.usesShizuku(); }
+    static boolean supportsBackendSelection() { return EditionBackend.supportsBackendSelection(); }
+    static int selectedBackend(Context context) { return EditionBackend.selectedBackend(context); }
+    static String selectedBackendLabel(Context context) { return EditionBackend.selectedBackendLabel(context); }
+    static void selectBackend(Context context, int backend) { EditionBackend.selectBackend(context, backend); }
+    static String dependencySummary(Context context) { return EditionBackend.dependencySummary(context); }
     static String backendStatus(Context context) { return EditionBackend.backendStatus(context); }
     static boolean isBackendAvailable(Context context) { return EditionBackend.isBackendAvailable(context); }
     static boolean hasAuthorization(Context context) { return EditionBackend.hasAuthorization(context); }

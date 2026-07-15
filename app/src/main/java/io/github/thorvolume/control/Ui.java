@@ -8,6 +8,8 @@ import android.widget.Toast;
 /** 与具体 Activity 无关的轻量界面反馈工具。 */
 final class Ui {
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
+    /** 复用同一 Toast，避免长按音量键时把大量提示排入系统队列。 */
+    private static Toast activeToast;
 
     private Ui() {}
 
@@ -22,7 +24,14 @@ final class Ui {
         MAIN.post(new Runnable() {
             @Override public void run() {
                 try {
-                    Toast.makeText(context.getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+                    if (activeToast == null) {
+                        activeToast = Toast.makeText(
+                                context.getApplicationContext(), text, Toast.LENGTH_SHORT);
+                    } else {
+                        activeToast.setText(text);
+                        activeToast.setDuration(Toast.LENGTH_SHORT);
+                    }
+                    activeToast.show();
                 } catch (Throwable error) {
                     Prefs.recordError(context, context.getString(R.string.error_toast), error);
                 }

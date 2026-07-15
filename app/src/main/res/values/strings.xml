@@ -10,6 +10,15 @@
     <string name="status_description">Enable the key service and authorize the volume backend before using hardware-key control.</string>
     <string name="status_checking">Checking…</string>
     <string name="request_authorization">Configure volume access</string>
+    <string name="backend_method">Authorization method</string>
+    <string name="backend_method_value">Authorization method · %1$s</string>
+    <string name="backend_method_title">Choose authorization method</string>
+    <string name="backend_method_shizuku">Shizuku</string>
+    <string name="backend_method_root">Root</string>
+    <string name="root_mode_title">Use Root access?</string>
+    <string name="root_mode_message">Root grants broad system privileges. Thor Volume Link uses it only to read and write secondary_screen_volume_level. While Root is selected, Shizuku is not used.</string>
+    <string name="use_root">Use Root</string>
+    <string name="apply">Apply</string>
     <string name="open_accessibility">Key service settings</string>
     <string name="accessibility_enabled">Key service · Enabled</string>
     <string name="accessibility_disabled">Key service · Disabled</string>
@@ -58,7 +67,7 @@
     <string name="secondary_volume">Secondary-screen volume</string>
     <string name="main_volume_value">Primary media volume\n%1$d / %2$d</string>
     <string name="secondary_volume_value">Secondary-screen volume\n%1$d / 15</string>
-    <string name="secondary_unavailable">Secondary-screen volume\nBackend unavailable</string>
+    <string name="secondary_unavailable">Secondary-screen volume\nDevice interface not detected</string>
     <string name="secondary_waiting_authorization">Secondary-screen volume\nAuthorization required</string>
     <string name="secondary_reading">Secondary-screen volume\nReading…</string>
     <string name="secondary_read_failed">Secondary-screen volume\nRead failed</string>
@@ -88,6 +97,14 @@
     <string name="authorization_shizuku_missing">Shizuku permission · Not granted</string>
     <string name="authorization_shizuku_recheck">Recheck Shizuku permission</string>
     <string name="authorization_shizuku_grant">Grant Shizuku permission</string>
+    <string name="backend_root_ready">Root backend · Ready</string>
+    <string name="backend_root_inactive">Root backend · Not authorized</string>
+    <string name="authorization_root_granted">Root access · Granted</string>
+    <string name="authorization_root_missing">Root access · Not granted</string>
+    <string name="authorization_root_recheck">Recheck Root access</string>
+    <string name="authorization_root_grant">Grant Root access</string>
+    <string name="root_permission_denied">Root access was not granted.</string>
+    <string name="backend_changed">Authorization method changed</string>
     <string name="shizuku_not_running">Shizuku is not connected. Start Shizuku first.</string>
     <string name="shizuku_permission_denied">Shizuku permission was not granted.</string>
     <string name="shizuku_service_unavailable">Shizuku volume service is unavailable.</string>
@@ -98,6 +115,7 @@
     <string name="authorization_settings_missing">Modify system settings · Not allowed</string>
     <string name="authorization_settings_review">Review modify-system-settings access</string>
     <string name="authorization_settings_allow">Allow modify system settings</string>
+    <string name="error_save_privileged_backend">Unable to save authorization method</string>
 
     <string name="footer_text">%1$s · %2$s · %3$s</string>
 
@@ -112,6 +130,7 @@
     <string name="error_read_main_max">Reading the primary volume range failed</string>
     <string name="error_adjust_main">Adjusting primary volume failed</string>
     <string name="error_write_secondary">Writing secondary volume failed</string>
+    <string name="error_read_secondary">Reading secondary volume failed</string>
     <string name="error_switch_mode">Changing volume-key mode failed</string>
     <string name="error_key_event">Handling hardware key failed (keyCode=%1$d)</string>
     <string name="error_vibration">Haptic feedback failed</string>

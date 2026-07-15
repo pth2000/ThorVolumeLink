@@ -14,7 +14,7 @@ import java.io.InputStreamReader;
  */
 public final class SecondaryVolumeUserService extends ISecondaryVolumeService.Stub {
     private static final String SETTINGS = "/system/bin/settings";
-    private static final String KEY = "secondary_screen_volume_level";
+    private static final String KEY = VolumeControl.SECONDARY_SETTING_KEY;
 
     /** 保证并发 Binder 请求中的“读取后增减再写入”是一个原子区段。 */
     private final Object lock = new Object();
@@ -67,15 +67,22 @@ public final class SecondaryVolumeUserService extends ISecondaryVolumeService.St
     }
 
     private static int readSetting() throws Exception {
-        String output = run(new String[] {SETTINGS, "get", "system", KEY});
-        if (output == null) return 0;
+        String output = run(new String[] {
+                SETTINGS, "--user", "current", "get", "system", KEY
+        });
+        if (output == null) throw new IllegalStateException("settings returned no output");
         output = output.trim();
-        if (output.length() == 0 || "null".equalsIgnoreCase(output)) return 0;
+        if (output.length() == 0 || "null".equalsIgnoreCase(output)) {
+            throw new IllegalStateException("secondary volume setting is missing");
+        }
         return clamp(Integer.parseInt(output));
     }
 
     private static void writeSetting(int value) throws Exception {
-        run(new String[] {SETTINGS, "put", "system", KEY, String.valueOf(clamp(value))});
+        run(new String[] {
+                SETTINGS, "--user", "current", "put", "system", KEY,
+                String.valueOf(clamp(value))
+        });
     }
 
     private static String run(String[] command) throws Exception {

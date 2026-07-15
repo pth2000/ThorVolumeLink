@@ -2,6 +2,7 @@ package io.github.thorvolume.control;
 
 import android.content.Context;
 import android.media.AudioManager;
+import android.provider.Settings;
 
 /**
  * 主屏与副屏音量操作的业务层。
@@ -14,6 +15,7 @@ final class VolumeControl {
     /** AYN Thor 厂商副屏音量设置的固定范围。 */
     static final int SECONDARY_MIN = 0;
     static final int SECONDARY_MAX = 15;
+    static final String SECONDARY_SETTING_KEY = "secondary_screen_volume_level";
 
     /** 面向业务层调用方的异步音量回调。 */
     interface VolumeCallback {
@@ -59,18 +61,34 @@ final class VolumeControl {
     }
 
     static void readSecondary(final Context context, final VolumeCallback callback) {
-        SecondaryVolumeGateway.read(context, wrap(context, false, callback));
+        SecondaryVolumeGateway.read(context,
+                wrap(context, false, R.string.error_read_secondary, callback));
+    }
+
+    /** 快速判断当前固件是否提供 AYN 副屏音量设置项。 */
+    static boolean hasSecondarySetting(Context context) {
+        try {
+            return Settings.System.getString(context.getContentResolver(),
+                    SECONDARY_SETTING_KEY) != null;
+        } catch (Throwable error) {
+            Prefs.recordError(context, context.getString(R.string.error_read_secondary), error);
+            return false;
+        }
     }
 
     static void adjustSecondary(final Context context, int delta, final boolean showFeedback, final VolumeCallback callback) {
-        SecondaryVolumeGateway.adjust(context, delta, wrap(context, showFeedback, callback));
+        SecondaryVolumeGateway.adjust(context, delta,
+                wrap(context, showFeedback, R.string.error_write_secondary, callback));
     }
 
     static void setSecondary(final Context context, int value, final boolean showFeedback, final VolumeCallback callback) {
-        SecondaryVolumeGateway.set(context, clamp(value), wrap(context, showFeedback, callback));
+        SecondaryVolumeGateway.set(context, clamp(value),
+                wrap(context, showFeedback, R.string.error_write_secondary, callback));
     }
 
-    private static SecondaryVolumeCallback wrap(final Context context, final boolean showFeedback, final VolumeCallback callback) {
+    private static SecondaryVolumeCallback wrap(final Context context, final boolean showFeedback,
+                                                final int errorStage,
+                                                final VolumeCallback callback) {
         // 将 Flavor 后端的裸回调转换成统一的错误持久化、Toast 和业务回调。
         return new SecondaryVolumeCallback() {
             @Override public void onComplete(boolean ok, int value, String error) {
@@ -81,7 +99,8 @@ final class VolumeControl {
                     }
                 } else {
                     String detail = error == null ? "" : error;
-                    Prefs.recordError(context, context.getString(R.string.error_write_secondary), new IllegalStateException(detail));
+                    Prefs.recordError(context, context.getString(errorStage),
+                            new IllegalStateException(detail));
                     if (showFeedback) Ui.toast(context, detail.length() == 0 ? context.getString(R.string.secondary_adjust_failed) : detail);
                 }
                 if (callback != null) callback.onComplete(ok, value, error);

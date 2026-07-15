@@ -4,9 +4,9 @@ import android.accessibilityservice.AccessibilityService;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
 import android.os.Vibrator;
 import android.view.KeyEvent;
+import android.view.ViewConfiguration;
 import android.view.accessibility.AccessibilityEvent;
 
 /**
@@ -16,8 +16,7 @@ import android.view.accessibility.AccessibilityEvent;
  * 副屏和联动模式会消费音量键，并委托 {@link VolumeControl} 完成实际调整。</p>
  */
 public final class ThorKeyService extends AccessibilityService {
-    /** 某些设备会高频派发长按重复事件，用时间门限避免一次产生多档跳变。 */
-    private static final long VOLUME_REPEAT_GUARD_MS = 90L;
+    private static final long FALLBACK_REPEAT_DELAY_MS = 50L;
 
     private Handler handler;
     // 模式键按下期间的状态；同时记录 keyCode 与 scanCode，以识别对应的抬起事件。
@@ -27,7 +26,10 @@ public final class ThorKeyService extends AccessibilityService {
     private int heldSwitchScan;
     private int capturedCode;
     private int capturedScan;
-    private long lastVolumeAdjustAt;
+    private boolean volumeHeld;
+    private boolean heldVolumeIncrease;
+    private int heldVolumeCode;
+    private int heldVolumeScan;
 
     /** 到达用户配置的长按阈值后，循环切换主屏、副屏和联动模式。 */
     private final Runnable switchLongPress = new Runnable() {
@@ -43,6 +45,20 @@ public final class ThorKeyService extends AccessibilityService {
             } catch (Throwable error) {
                 Prefs.recordError(ThorKeyService.this, getString(R.string.error_switch_mode), error);
                 Ui.toast(ThorKeyService.this, getString(R.string.mode_switch_failed));
+            }
+        }
+    };
+
+    /** 不依赖设备产生 repeatCount，由服务自行驱动长按连续调节。 */
+    private final Runnable volumeRepeat = new Runnable() {
+        @Override public void run() {
+            if (!volumeHeld) return;
+            int mode = Prefs.getMode(ThorKeyService.this);
+            // 按住期间若切回主屏模式，停止调节但保留状态，以便吞掉对应 ACTION_UP。
+            if (mode == Prefs.MODE_MAIN) return;
+            adjustHeldVolume(mode);
+            if (volumeHeld && handler != null) {
+                handler.postDelayed(this, systemKeyRepeatDelay());
             }
         }
     };
@@ -163,23 +179,69 @@ public final class ThorKeyService extends AccessibilityService {
     }
 
     private boolean handleVolume(KeyEvent event, boolean increase) {
+        if (volumeHeld && matchesHeldVolume(event)) {
+            if (event.getAction() == KeyEvent.ACTION_UP) cancelHeldVolume();
+            // 忽略设备额外产生的重复 ACTION_DOWN，避免与内部定时器叠加。
+            return true;
+        }
+
         int mode = Prefs.getMode(this);
         // 返回 false 让 Android 继续按原生路径处理主屏音量。
         if (mode == Prefs.MODE_MAIN) return false;
 
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
-            long now = SystemClock.uptimeMillis();
-            if (event.getRepeatCount() == 0 || now - lastVolumeAdjustAt >= VOLUME_REPEAT_GUARD_MS) {
-                lastVolumeAdjustAt = now;
-                int delta = (increase ? 1 : -1) * Prefs.getStep(this);
-                if (mode == Prefs.MODE_SYNC) {
-                    VolumeControl.adjustSynced(this, delta);
-                } else {
-                    VolumeControl.adjustSecondary(this, delta, true, null);
-                }
+            // 同时按下另一枚音量键时，以最后按下的方向为准。
+            cancelHeldVolume();
+            volumeHeld = true;
+            heldVolumeIncrease = increase;
+            heldVolumeCode = event.getKeyCode();
+            heldVolumeScan = event.getScanCode();
+            adjustHeldVolume(mode);
+            if (handler != null) {
+                handler.postDelayed(volumeRepeat, systemKeyRepeatTimeout());
             }
         }
         return true;
+    }
+
+    private void adjustHeldVolume(int mode) {
+        int delta = (heldVolumeIncrease ? 1 : -1) * Prefs.getStep(this);
+        if (mode == Prefs.MODE_SYNC) {
+            VolumeControl.adjustSynced(this, delta);
+        } else {
+            VolumeControl.adjustSecondary(this, delta, true, null);
+        }
+    }
+
+    private boolean matchesHeldVolume(KeyEvent event) {
+        if (heldVolumeCode != 0 && event.getKeyCode() == heldVolumeCode) return true;
+        return heldVolumeScan > 0 && event.getScanCode() == heldVolumeScan;
+    }
+
+    private void cancelHeldVolume() {
+        if (handler != null) handler.removeCallbacks(volumeRepeat);
+        volumeHeld = false;
+        heldVolumeIncrease = false;
+        heldVolumeCode = 0;
+        heldVolumeScan = 0;
+    }
+
+    /** 使用当前设备与系统设置实际采用的首次按键重复等待时间。 */
+    private static long systemKeyRepeatTimeout() {
+        try {
+            return Math.max(1, ViewConfiguration.getKeyRepeatTimeout());
+        } catch (Throwable ignored) {
+            return Math.max(1, ViewConfiguration.getLongPressTimeout());
+        }
+    }
+
+    /** 使用当前设备与系统设置实际采用的连续按键重复间隔。 */
+    private static long systemKeyRepeatDelay() {
+        try {
+            return Math.max(1, ViewConfiguration.getKeyRepeatDelay());
+        } catch (Throwable ignored) {
+            return FALLBACK_REPEAT_DELAY_MS;
+        }
     }
 
     private void giveModeFeedback(int mode) {
@@ -200,10 +262,15 @@ public final class ThorKeyService extends AccessibilityService {
     }
 
     @Override public void onAccessibilityEvent(AccessibilityEvent event) {}
-    @Override public void onInterrupt() {}
+
+    @Override public void onInterrupt() {
+        cancelHeldSwitch();
+        cancelHeldVolume();
+    }
 
     @Override public void onDestroy() {
         if (handler != null) handler.removeCallbacks(switchLongPress);
+        cancelHeldVolume();
         super.onDestroy();
     }
 }

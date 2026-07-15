@@ -1,2 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources><string name="edition_name">Standard</string></resources>
+<resources>
+    <string name="edition_name">Standard</string>
+    <string name="standard_dependencies">Standard 使用 Shizuku API（MIT）与 libsu（Apache-2.0）。</string>
+</resources>
