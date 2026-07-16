@@ -4,7 +4,7 @@
     <string name="app_name_lite">Thor Volume Link Lite</string>
     <string name="app_title">Thor Volume Link</string>
     <string name="app_subtitle">Dual-screen volume routing and synchronization for AYN Thor.</string>
-    <string name="service_description">Handles the mode-switch key and volume keys to control the primary screen, secondary screen, or both. The service does not inspect screen content.</string>
+    <string name="service_description">Handles the mode-switch key and volume keys to control the primary screen, secondary screen, both screens, or the most recently interacted-with screen. The service does not inspect screen content.</string>
 
     <string name="section_status">Service status</string>
     <string name="status_description">Enable the key service and authorize the volume backend before using hardware-key control.</string>
@@ -30,13 +30,15 @@
     <string name="mode_main">Primary</string>
     <string name="mode_secondary">Secondary</string>
     <string name="mode_sync">Linked</string>
+    <string name="mode_focus">Follow focus</string>
     <string name="mode_main_description">Volume keys retain Android’s default behavior and adjust the primary-screen media volume.</string>
     <string name="mode_secondary_description">Volume keys are intercepted and adjust only the secondary-screen volume.</string>
     <string name="mode_sync_description">Android’s volume panel remains visible while the secondary-screen volume follows the same relative level.</string>
+    <string name="mode_focus_description">Volume keys control the most recently interacted-with screen. The target stays fixed while a key is held.</string>
     <string name="mode_changed">Volume-key mode: %1$s</string>
 
     <string name="section_controls">Key behavior</string>
-    <string name="controls_description">Long-press the mode key to cycle through Primary, Secondary, and Linked. Volume Up and Volume Down always remain the adjustment keys.</string>
+    <string name="controls_description">Long-press the mode key to cycle through Primary, Secondary, Linked, and Follow focus. Volume Up and Volume Down always remain the adjustment keys.</string>
     <string name="switch_key">Mode key</string>
     <string name="switch_key_value">Mode key\n%1$s</string>
     <string name="hold_duration">Long-press threshold</string>
@@ -134,6 +136,7 @@
     <string name="error_switch_mode">Changing volume-key mode failed</string>
     <string name="error_key_event">Handling hardware key failed (keyCode=%1$d)</string>
     <string name="error_vibration">Haptic feedback failed</string>
+    <string name="error_track_focus">Reading AYN focus state failed</string>
     <string name="error_open_accessibility">Opening Accessibility settings failed</string>
     <string name="error_check_accessibility">Checking key-service status failed</string>
     <string name="no_recent_errors">No recent errors</string>
@@ -149,19 +152,16 @@
     <string name="group_mode_switch">Mode switching</string>
     <string name="group_volume_adjustment">Volume adjustment</string>
     <string name="mode_key_enabled">Use a hardware key to switch modes</string>
-    <string name="mode_key_enabled_summary">Long-press the configured key to cycle through Primary, Secondary, and Linked.</string>
+    <string name="mode_key_enabled_summary">Long-press the configured key to cycle through Primary, Secondary, Linked, and Follow focus.</string>
     <string name="mode_key_disabled_summary">Modes can be changed only from the app. The configured key keeps its original system behavior.</string>
     <string name="section_general">General</string>
     <string name="section_key_feedback">Key feedback</string>
-    <string name="notification_feedback">Notification feedback</string>
-    <string name="notification_feedback_enabled_summary">Show mode changes and secondary-volume values; background display requires notification access.</string>
-    <string name="notification_feedback_disabled_summary">Mode-change and secondary-volume notifications are turned off.</string>
-    <string name="notification_feedback_permission_summary">Notification permission is required to show feedback in the background.</string>
+    <string name="visual_feedback">On-screen feedback</string>
+    <string name="visual_feedback_enabled_summary">Show mode changes and secondary-volume values on screen.</string>
+    <string name="visual_feedback_disabled_summary">On-screen mode and secondary-volume feedback is turned off.</string>
     <string name="vibration_feedback">Vibration feedback</string>
     <string name="vibration_feedback_enabled_summary">Use distinct vibration patterns to identify the selected mode.</string>
     <string name="vibration_feedback_disabled_summary">Mode-change vibration is turned off.</string>
-    <string name="notification_permission_denied">Notification permission was not granted. Background feedback remains off.</string>
-    <string name="notification_settings_failed">Unable to open notification settings</string>
     <string name="language">Language</string>
     <string name="language_system">Follow system</string>
     <string name="language_chinese">简体中文</string>
@@ -173,6 +173,53 @@
     <string name="setting_value">%1$s\n%2$s</string>
     <string name="section_about">About</string>
     <string name="about_project">About Thor Volume Link</string>
+    <string name="developer_tools">Developer tools</string>
+    <string name="developer_tools_description">Device diagnostics intended for troubleshooting and development.</string>
+    <string name="open_developer_tools">Open developer tools</string>
+    <string name="developer_tools_subtitle">Inspect device-specific signals without connecting Android Studio.</string>
+    <plurals name="developer_tools_taps_remaining">
+        <item quantity="one">You are %1$d step away from becoming a developer.</item>
+        <item quantity="other">You are %1$d steps away from becoming a developer.</item>
+    </plurals>
+    <string name="developer_tools_enabled">Developer tools are now available in Settings.</string>
+    <string name="developer_tools_already_enabled">Developer tools are already enabled.</string>
+    <string name="developer_tools_disabled">Developer tools disabled</string>
+    <string name="disable_developer_tools">Disable developer tools</string>
+    <string name="disable_developer_tools_confirmation">This hides the Developer tools section. You can unlock it again by tapping the version seven times.</string>
+    <string name="disable">Disable</string>
+    <string name="focus_debug_title">Focus diagnostics</string>
+    <string name="focus_debug_subtitle">Read AYN’s focus_change value and optionally observe changes in real time.</string>
+    <string name="focus_debug_live_listener">Live listener</string>
+    <string name="focus_debug_listener_running">Running. Changes are being recorded.</string>
+    <string name="focus_debug_listener_stopped">Stopped. Manual refresh is still available.</string>
+    <string name="focus_debug_listener_failed">Could not start the listener. See the report below.</string>
+    <string name="focus_debug_status_checking">Checking…</string>
+    <string name="focus_debug_status_success">focus_change is readable</string>
+    <string name="focus_debug_status_failure">focus_change is unavailable</string>
+    <string name="focus_debug_refresh">Refresh</string>
+    <string name="focus_debug_copy">Copy report</string>
+    <string name="focus_debug_copied">Diagnostic report copied</string>
+    <string name="focus_debug_copy_failed">Unable to copy report: %1$s</string>
+    <string name="focus_debug_history_title">Event history</string>
+    <string name="focus_debug_no_events">No events yet.</string>
+    <string name="focus_debug_instructions">With AYN Focus Mode set to Auto, start the live listener and touch the upper and lower displays alternately. Notifications should increase and show odd → Primary, even → Secondary.</string>
+    <string name="focus_debug_target_primary">Primary (upper display)</string>
+    <string name="focus_debug_target_secondary">Secondary (lower display)</string>
+    <string name="focus_debug_target_unknown">Unknown</string>
+    <string name="focus_debug_parity_odd">Odd</string>
+    <string name="focus_debug_parity_even">Even</string>
+    <string name="focus_debug_value_unavailable">Unavailable</string>
+    <string name="focus_debug_read_success">Success</string>
+    <string name="focus_debug_value_missing">Key missing or returned -1</string>
+    <string name="focus_debug_read_error">Error · %1$s</string>
+    <string name="focus_debug_observer_active">Running</string>
+    <string name="focus_debug_observer_stopped">Stopped</string>
+    <string name="focus_debug_observer_error">Failed · %1$s</string>
+    <string name="focus_debug_source_observer">listener</string>
+    <string name="focus_debug_source_manual">manual</string>
+    <string name="focus_debug_history_line">%1$s · %2$s · value=%3$d · %4$s</string>
+    <string name="focus_debug_history_error">%1$s · %2$s · ERROR · %3$s</string>
+    <string name="focus_debug_report_format">Package: %1$s\nURI: %2$s\nRead: %3$s\nRaw value: %4$d\nParity: %5$s\nInferred target: %6$s\nActivity display ID: %7$d\nListener: %8$s\nNotifications: %9$d\nLast update: %10$s</string>
     <string name="check_updates">Check for updates</string>
     <string name="checking_updates">Checking…</string>
     <string name="update_available">Update available</string>
@@ -206,9 +253,9 @@
     <string name="link_open_failed">Unable to open the link.</string>
     <string name="error_open_link">Opening project link failed</string>
     <string name="error_save_mode_key_enabled">Saving the mode-key setting failed</string>
-    <string name="error_save_notification_feedback">Saving the background-feedback setting failed</string>
+    <string name="error_save_visual_feedback">Saving the on-screen feedback setting failed</string>
     <string name="error_save_vibration_feedback">Saving the vibration-feedback setting failed</string>
-    <string name="error_open_notification_settings">Opening notification settings failed</string>
+    <string name="error_feedback_overlay">Showing the key-feedback overlay failed</string>
     <string name="error_save_night_mode">Saving the appearance setting failed</string>
     <string name="project_url" translatable="false">https://github.com/pth2000/ThorVolumeLink</string>
     <string name="release_api_url" translatable="false">https://api.github.com/repos/pth2000/ThorVolumeLink/releases/latest</string>

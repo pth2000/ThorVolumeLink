@@ -15,15 +15,22 @@ import androidx.appcompat.app.AppCompatActivity;
 
 /** 集中展示版本更新、项目地址、许可证和隐私说明。 */
 public final class AboutActivity extends AppCompatActivity {
+    private static final int DEVELOPER_TAPS_REQUIRED = 7;
+
     private Button checkUpdates;
     private TextView updateStatus;
+    private int developerTapsRemaining = DEVELOPER_TAPS_REQUIRED;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about);
 
-        ((TextView) findViewById(R.id.version)).setText(getString(
+        TextView version = (TextView) findViewById(R.id.version);
+        version.setText(getString(
                 R.string.about_version, BuildConfig.VERSION_NAME, getString(R.string.edition_name)));
+        version.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { handleVersionTap(); }
+        });
         TextView dependencies = (TextView) findViewById(R.id.dependencies);
         String dependencySummary = SecondaryVolumeGateway.dependencySummary(this);
         if (dependencySummary != null && dependencySummary.length() > 0) {
@@ -41,6 +48,24 @@ public final class AboutActivity extends AppCompatActivity {
         checkUpdates.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { checkForUpdates(); }
         });
+    }
+
+    /** 模仿 Android 系统设置：连续点击版本号七次后显示开发者工具入口。 */
+    private void handleVersionTap() {
+        if (Prefs.areDeveloperToolsEnabled(this)) {
+            Ui.toast(this, getString(R.string.developer_tools_already_enabled));
+            return;
+        }
+        developerTapsRemaining--;
+        if (developerTapsRemaining <= 0) {
+            Prefs.setDeveloperToolsEnabled(this, true);
+            Ui.toast(this, getString(R.string.developer_tools_enabled));
+        } else {
+            Ui.toast(this, getResources().getQuantityString(
+                    R.plurals.developer_tools_taps_remaining,
+                    developerTapsRemaining,
+                    Integer.valueOf(developerTapsRemaining)));
+        }
     }
 
     private void checkForUpdates() {

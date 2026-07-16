@@ -94,8 +94,9 @@ final class VolumeControl {
             @Override public void onComplete(boolean ok, int value, String error) {
                 if (ok) {
                     Prefs.clearLastError(context);
-                    if (showFeedback && FeedbackNotifications.shouldShowFeedback(context)) {
-                        Ui.toast(context, context.getString(R.string.secondary_feedback, Integer.valueOf(value)));
+                    if (showFeedback) {
+                        FeedbackDisplay.show(context,
+                                context.getString(R.string.secondary_feedback, Integer.valueOf(value)));
                     }
                 } else {
                     String detail = error == null ? "" : error;

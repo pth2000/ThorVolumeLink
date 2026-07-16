@@ -36,6 +36,7 @@ public final class MainActivity extends AppCompatActivity {
     private Button modeMain;
     private Button modeSecondary;
     private Button modeSync;
+    private Button modeFocus;
 
     private boolean resumed;
     private boolean secondaryReadInFlight;
@@ -77,6 +78,7 @@ public final class MainActivity extends AppCompatActivity {
         modeMain = (Button) findViewById(R.id.mode_main);
         modeSecondary = (Button) findViewById(R.id.mode_secondary);
         modeSync = (Button) findViewById(R.id.mode_sync);
+        modeFocus = (Button) findViewById(R.id.mode_focus);
 
         findViewById(R.id.open_settings).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { openSettings(); }
@@ -113,6 +115,9 @@ public final class MainActivity extends AppCompatActivity {
                 setMode(Prefs.MODE_SYNC);
                 VolumeControl.syncSecondaryToMain(MainActivity.this, false, null);
             }
+        });
+        modeFocus.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { setMode(Prefs.MODE_FOCUS); }
         });
         findViewById(R.id.sync_now).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
@@ -267,10 +272,12 @@ public final class MainActivity extends AppCompatActivity {
         modeStatus.setText(Prefs.modeLabel(this, mode));
         if (mode == Prefs.MODE_MAIN) modeDescription.setText(R.string.mode_main_description);
         else if (mode == Prefs.MODE_SECONDARY) modeDescription.setText(R.string.mode_secondary_description);
-        else modeDescription.setText(R.string.mode_sync_description);
+        else if (mode == Prefs.MODE_SYNC) modeDescription.setText(R.string.mode_sync_description);
+        else modeDescription.setText(R.string.mode_focus_description);
         modeMain.setBackgroundResource(mode == Prefs.MODE_MAIN ? R.drawable.segment_selected : R.drawable.segment_unselected);
         modeSecondary.setBackgroundResource(mode == Prefs.MODE_SECONDARY ? R.drawable.segment_selected : R.drawable.segment_unselected);
         modeSync.setBackgroundResource(mode == Prefs.MODE_SYNC ? R.drawable.segment_selected : R.drawable.segment_unselected);
+        modeFocus.setBackgroundResource(mode == Prefs.MODE_FOCUS ? R.drawable.segment_selected : R.drawable.segment_unselected);
 
         String error = Prefs.getLastError(this);
         if (error == null || error.length() == 0) {

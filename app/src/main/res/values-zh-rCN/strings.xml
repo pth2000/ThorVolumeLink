@@ -4,7 +4,7 @@
     <string name="app_name_lite">Thor Volume Link Lite</string>
     <string name="app_title">Thor Volume Link</string>
     <string name="app_subtitle">为 AYN Thor 提供双屏音量目标切换与同步控制。</string>
-    <string name="service_description">监听模式切换键和系统音量键，根据当前模式控制主屏、副屏或双屏音量。服务不会读取屏幕内容。</string>
+    <string name="service_description">监听模式切换键和系统音量键，根据当前模式控制主屏、副屏、双屏或最近交互的屏幕。服务不会读取屏幕内容。</string>
 
     <string name="section_status">服务状态</string>
     <string name="status_description">完成音量接口授权并启用按键服务后，即可使用实体按键控制。</string>
@@ -30,13 +30,15 @@
     <string name="mode_main">主屏</string>
     <string name="mode_secondary">副屏</string>
     <string name="mode_sync">双屏联动</string>
+    <string name="mode_focus">跟随焦点</string>
     <string name="mode_main_description">音量键保持 Android 原生行为，调整主屏媒体音量。</string>
     <string name="mode_secondary_description">音量键由本应用接管，仅调整副屏音量。</string>
     <string name="mode_sync_description">保留系统音量面板，并按相同比例同步副屏音量。</string>
+    <string name="mode_focus_description">音量键控制最近交互的屏幕；按住期间不会切换目标。</string>
     <string name="mode_changed">音量键模式：%1$s</string>
 
     <string name="section_controls">按键行为</string>
-    <string name="controls_description">长按模式键可依次切换主屏、副屏和双屏联动。音量增加和降低始终使用系统音量键。</string>
+    <string name="controls_description">长按模式键可依次切换主屏、副屏、双屏联动和跟随焦点。音量增加和降低始终使用系统音量键。</string>
     <string name="switch_key">模式键</string>
     <string name="switch_key_value">模式键\n%1$s</string>
     <string name="hold_duration">长按判定时长</string>
@@ -134,6 +136,7 @@
     <string name="error_switch_mode">切换音量键模式失败</string>
     <string name="error_key_event">处理实体按键失败（keyCode=%1$d）</string>
     <string name="error_vibration">触觉反馈失败</string>
+    <string name="error_track_focus">读取 AYN 焦点状态失败</string>
     <string name="error_open_accessibility">打开无障碍设置失败</string>
     <string name="error_check_accessibility">检查按键服务状态失败</string>
     <string name="no_recent_errors">没有最近错误</string>
@@ -149,19 +152,16 @@
     <string name="group_mode_switch">模式切换</string>
     <string name="group_volume_adjustment">音量调整</string>
     <string name="mode_key_enabled">使用实体键切换模式</string>
-    <string name="mode_key_enabled_summary">长按已配置的按键，在主屏、副屏和双屏联动之间循环切换。</string>
+    <string name="mode_key_enabled_summary">长按已配置的按键，在主屏、副屏、双屏联动和跟随焦点之间循环切换。</string>
     <string name="mode_key_disabled_summary">只能从应用内切换模式，已配置按键将保持原有系统行为。</string>
     <string name="section_general">通用</string>
     <string name="section_key_feedback">按键反馈</string>
-    <string name="notification_feedback">通知反馈</string>
-    <string name="notification_feedback_enabled_summary">显示模式切换和副屏音量数值；后台显示需要通知权限。</string>
-    <string name="notification_feedback_disabled_summary">已关闭模式切换和副屏音量通知。</string>
-    <string name="notification_feedback_permission_summary">需要通知权限才能在后台显示反馈。</string>
+    <string name="visual_feedback">屏幕反馈</string>
+    <string name="visual_feedback_enabled_summary">在屏幕上显示模式切换和副屏音量数值。</string>
+    <string name="visual_feedback_disabled_summary">已关闭模式切换和副屏音量屏幕反馈。</string>
     <string name="vibration_feedback">振动反馈</string>
     <string name="vibration_feedback_enabled_summary">使用不同的振动段数提示当前模式。</string>
     <string name="vibration_feedback_disabled_summary">已关闭模式切换振动。</string>
-    <string name="notification_permission_denied">未授予通知权限，后台反馈仍保持关闭。</string>
-    <string name="notification_settings_failed">无法打开通知设置</string>
     <string name="language">语言</string>
     <string name="language_system">跟随系统</string>
     <string name="language_chinese">简体中文</string>
@@ -173,6 +173,52 @@
     <string name="setting_value">%1$s\n%2$s</string>
     <string name="section_about">关于</string>
     <string name="about_project">关于 Thor Volume Link</string>
+    <string name="developer_tools">开发者工具</string>
+    <string name="developer_tools_description">用于排查设备问题和开发测试的诊断功能。</string>
+    <string name="open_developer_tools">打开开发者工具</string>
+    <string name="developer_tools_subtitle">无需连接 Android Studio 即可检查设备专用信号。</string>
+    <plurals name="developer_tools_taps_remaining">
+        <item quantity="other">再点击 %1$d 次即可进入开发者模式。</item>
+    </plurals>
+    <string name="developer_tools_enabled">开发者工具已在设置中启用。</string>
+    <string name="developer_tools_already_enabled">开发者工具已启用。</string>
+    <string name="developer_tools_disabled">开发者工具已停用</string>
+    <string name="disable_developer_tools">停用开发者工具</string>
+    <string name="disable_developer_tools_confirmation">这会隐藏“开发者工具”设置。再次连续点击版本号七次即可重新启用。</string>
+    <string name="disable">停用</string>
+    <string name="focus_debug_title">焦点诊断</string>
+    <string name="focus_debug_subtitle">读取 AYN 的 focus_change 值，并可选择实时监听变化。</string>
+    <string name="focus_debug_live_listener">实时监听</string>
+    <string name="focus_debug_listener_running">正在运行并记录变化。</string>
+    <string name="focus_debug_listener_stopped">已停止，仍可手动刷新。</string>
+    <string name="focus_debug_listener_failed">无法启动监听，请查看下方报告。</string>
+    <string name="focus_debug_status_checking">正在检查…</string>
+    <string name="focus_debug_status_success">可以读取 focus_change</string>
+    <string name="focus_debug_status_failure">无法使用 focus_change</string>
+    <string name="focus_debug_refresh">刷新</string>
+    <string name="focus_debug_copy">复制报告</string>
+    <string name="focus_debug_copied">已复制诊断报告</string>
+    <string name="focus_debug_copy_failed">复制报告失败：%1$s</string>
+    <string name="focus_debug_history_title">事件记录</string>
+    <string name="focus_debug_no_events">暂无事件。</string>
+    <string name="focus_debug_instructions">将 AYN 焦点模式设为“自动”，启动实时监听后交替触摸上下屏。通知次数应增加，并显示奇数 → 主屏、偶数 → 副屏。</string>
+    <string name="focus_debug_target_primary">主屏（上屏）</string>
+    <string name="focus_debug_target_secondary">副屏（下屏）</string>
+    <string name="focus_debug_target_unknown">未知</string>
+    <string name="focus_debug_parity_odd">奇数</string>
+    <string name="focus_debug_parity_even">偶数</string>
+    <string name="focus_debug_value_unavailable">不可用</string>
+    <string name="focus_debug_read_success">成功</string>
+    <string name="focus_debug_value_missing">键不存在或返回 -1</string>
+    <string name="focus_debug_read_error">错误 · %1$s</string>
+    <string name="focus_debug_observer_active">运行中</string>
+    <string name="focus_debug_observer_stopped">已停止</string>
+    <string name="focus_debug_observer_error">失败 · %1$s</string>
+    <string name="focus_debug_source_observer">监听</string>
+    <string name="focus_debug_source_manual">手动</string>
+    <string name="focus_debug_history_line">%1$s · %2$s · 值=%3$d · %4$s</string>
+    <string name="focus_debug_history_error">%1$s · %2$s · 错误 · %3$s</string>
+    <string name="focus_debug_report_format">包名：%1$s\nURI：%2$s\n读取：%3$s\n原始值：%4$d\n奇偶：%5$s\n推断目标：%6$s\n当前页面屏幕 ID：%7$d\n监听器：%8$s\n通知次数：%9$d\n最后更新：%10$s</string>
     <string name="check_updates">检查更新</string>
     <string name="checking_updates">正在检查…</string>
     <string name="update_available">发现新版本</string>
@@ -206,8 +252,8 @@
     <string name="link_open_failed">无法打开链接。</string>
     <string name="error_open_link">打开项目链接失败</string>
     <string name="error_save_mode_key_enabled">保存模式键设置失败</string>
-    <string name="error_save_notification_feedback">保存后台反馈设置失败</string>
+    <string name="error_save_visual_feedback">保存屏幕反馈设置失败</string>
     <string name="error_save_vibration_feedback">保存振动反馈设置失败</string>
-    <string name="error_open_notification_settings">打开通知设置失败</string>
+    <string name="error_feedback_overlay">显示按键反馈悬浮层失败</string>
     <string name="error_save_night_mode">保存外观设置失败</string>
 </resources>

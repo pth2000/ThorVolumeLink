@@ -17,6 +17,8 @@ final class Prefs {
     static final int MODE_SECONDARY = 1;
     /** 主屏变化后，按比例同步副屏。 */
     static final int MODE_SYNC = 2;
+    /** 根据 AYN 系统记录的最近交互屏幕，控制主屏或副屏。 */
+    static final int MODE_FOCUS = 3;
 
     static final int CAPTURE_NONE = 0;
     static final int CAPTURE_SWITCH = 1;
@@ -37,12 +39,14 @@ final class Prefs {
     private static final String KEY_SWITCH_CODE = "switch_key_code";
     private static final String KEY_SWITCH_SCAN = "switch_scan_code";
     private static final String KEY_MODE_KEY_ENABLED = "mode_key_enabled";
-    private static final String KEY_NOTIFICATION_FEEDBACK_ENABLED = "notification_feedback_enabled";
+    /** 沿用旧键名，升级时保留用户此前的反馈开关选择。 */
+    private static final String KEY_VISUAL_FEEDBACK_ENABLED = "notification_feedback_enabled";
     private static final String KEY_VIBRATION_FEEDBACK_ENABLED = "vibration_feedback_enabled";
     private static final String KEY_VIBRATION_FEEDBACK_CONFIGURED = "vibration_feedback_configured";
     private static final String KEY_NIGHT_MODE = "night_mode";
     private static final String KEY_ONBOARDING_SEEN = "onboarding_seen";
     private static final String KEY_PRIVILEGED_BACKEND = "privileged_backend";
+    private static final String KEY_DEVELOPER_TOOLS_ENABLED = "developer_tools_enabled";
 
     /** 模式切换键绑定；优先使用设备扫描码，以兼容厂商自定义实体键。 */
     static final class Binding {
@@ -86,14 +90,14 @@ final class Prefs {
     static int getMode(Context context) {
         try {
             int value = prefs(context).getInt(KEY_MODE, MODE_SYNC);
-            return value < MODE_MAIN || value > MODE_SYNC ? MODE_SYNC : value;
+            return value < MODE_MAIN || value > MODE_FOCUS ? MODE_SYNC : value;
         } catch (Throwable ignored) {
             return MODE_SYNC;
         }
     }
 
     static void setMode(Context context, int mode) {
-        int safe = mode < MODE_MAIN || mode > MODE_SYNC ? MODE_SYNC : mode;
+        int safe = mode < MODE_MAIN || mode > MODE_FOCUS ? MODE_SYNC : mode;
         try {
             prefs(context).edit().putInt(KEY_MODE, safe).apply();
         } catch (Throwable error) {
@@ -102,7 +106,7 @@ final class Prefs {
     }
 
     static int nextMode(Context context) {
-        int next = (getMode(context) + 1) % 3;
+        int next = (getMode(context) + 1) % (MODE_FOCUS + 1);
         setMode(context, next);
         return next;
     }
@@ -124,20 +128,20 @@ final class Prefs {
         }
     }
 
-    /** 是否允许通过 Toast 显示模式切换和副屏音量反馈。 */
-    static boolean isNotificationFeedbackEnabled(Context context) {
+    /** 是否允许通过 Toast 或无障碍悬浮层显示按键反馈。 */
+    static boolean isVisualFeedbackEnabled(Context context) {
         try {
-            return prefs(context).getBoolean(KEY_NOTIFICATION_FEEDBACK_ENABLED, true);
+            return prefs(context).getBoolean(KEY_VISUAL_FEEDBACK_ENABLED, true);
         } catch (Throwable ignored) {
             return true;
         }
     }
 
-    static void setNotificationFeedbackEnabled(Context context, boolean enabled) {
+    static void setVisualFeedbackEnabled(Context context, boolean enabled) {
         try {
-            prefs(context).edit().putBoolean(KEY_NOTIFICATION_FEEDBACK_ENABLED, enabled).apply();
+            prefs(context).edit().putBoolean(KEY_VISUAL_FEEDBACK_ENABLED, enabled).apply();
         } catch (Throwable error) {
-            recordError(context, context.getString(R.string.error_save_notification_feedback), error);
+            recordError(context, context.getString(R.string.error_save_visual_feedback), error);
         }
     }
 
@@ -276,7 +280,7 @@ final class Prefs {
                     .putInt(KEY_HOLD_MS, 800)
                     .putInt(KEY_STEP, 1)
                     .putBoolean(KEY_MODE_KEY_ENABLED, true)
-                    .putBoolean(KEY_NOTIFICATION_FEEDBACK_ENABLED, true)
+                    .putBoolean(KEY_VISUAL_FEEDBACK_ENABLED, true)
                     .putBoolean(KEY_VIBRATION_FEEDBACK_ENABLED, true)
                     .putBoolean(KEY_VIBRATION_FEEDBACK_CONFIGURED, true)
                     .putInt(KEY_CAPTURE_TARGET, CAPTURE_NONE)
@@ -340,6 +344,21 @@ final class Prefs {
         } catch (Throwable ignored) {}
     }
 
+    /** 是否已通过“关于”页的版本号彩蛋解锁开发者工具。 */
+    static boolean areDeveloperToolsEnabled(Context context) {
+        try {
+            return prefs(context).getBoolean(KEY_DEVELOPER_TOOLS_ENABLED, false);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    static void setDeveloperToolsEnabled(Context context, boolean enabled) {
+        try {
+            prefs(context).edit().putBoolean(KEY_DEVELOPER_TOOLS_ENABLED, enabled).apply();
+        } catch (Throwable ignored) {}
+    }
+
     static String getLastError(Context context) {
         try {
             return prefs(context).getString(KEY_LAST_ERROR, "");
@@ -368,7 +387,8 @@ final class Prefs {
     static String modeLabel(Context context, int mode) {
         if (mode == MODE_MAIN) return context.getString(R.string.mode_main);
         if (mode == MODE_SECONDARY) return context.getString(R.string.mode_secondary);
-        return context.getString(R.string.mode_sync);
+        if (mode == MODE_SYNC) return context.getString(R.string.mode_sync);
+        return context.getString(R.string.mode_focus);
     }
 
     private static SharedPreferences prefs(Context context) {
