@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import android.view.Display;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -143,6 +144,22 @@ public final class MainActivity extends AppCompatActivity {
         handler.removeCallbacks(liveRefresh);
         SecondaryVolumeGateway.setStatusListener(null);
         super.onPause();
+    }
+
+    @Override public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (!hasFocus) return;
+        try {
+            long focusChange = FocusChangeSetting.read(this);
+            FocusChangeSetting.observe(this, focusChange);
+            if (FocusChangeSetting.isCalibrated(this, focusChange)) return;
+            Display display = getWindow().getDecorView().getDisplay();
+            if (display != null) {
+                FocusChangeSetting.calibrateFromDisplay(this, display.getDisplayId());
+            }
+        } catch (Throwable ignored) {
+            // 服务仍会使用开机计数完成自动校正。
+        }
     }
 
     private void openSettings() {

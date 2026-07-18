@@ -135,6 +135,12 @@ final class EditionBackend {
         });
     }
 
+    static boolean canReadFocusedDisplay() { return false; }
+
+    static void readFocusedDisplay(Context context, SecondaryVolumeCallback callback) {
+        complete(callback, false, -1, "FocusedDisplayId requires a privileged backend");
+    }
+
     private static void complete(final SecondaryVolumeCallback callback, final boolean ok, final int value, final String error) {
         // 即使调用发生在工作线程，也向上层提供统一的主线程回调语义。
         MAIN.post(new Runnable() {

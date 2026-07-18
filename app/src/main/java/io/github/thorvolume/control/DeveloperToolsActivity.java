@@ -177,13 +177,15 @@ public final class DeveloperToolsActivity extends AppCompatActivity {
         }
 
         boolean readable = readError == null && FocusChangeSetting.isAvailable(value);
-        String target = readable
-                ? getString(FocusChangeSetting.targetsPrimary(value)
+        if (readable) FocusChangeSetting.observe(this, value);
+        FocusChangeSetting.DebugState debugState = FocusChangeSetting.debugState(this);
+        String target = readable && debugState.primaryParity != null
+                ? getString(FocusChangeSetting.targetsPrimary(this, value)
                         ? R.string.focus_debug_target_primary
                         : R.string.focus_debug_target_secondary)
                 : getString(R.string.focus_debug_target_unknown);
         String parity = readable
-                ? getString(FocusChangeSetting.targetsPrimary(value)
+                ? getString((value & 1L) == 1L
                         ? R.string.focus_debug_parity_odd
                         : R.string.focus_debug_parity_even)
                 : getString(R.string.focus_debug_value_unavailable);
@@ -197,6 +199,23 @@ public final class DeveloperToolsActivity extends AppCompatActivity {
                 : listenerRequested && observerError != null
                         ? getString(R.string.focus_debug_observer_error, observerError)
                         : getString(R.string.focus_debug_observer_stopped);
+        String systemBootCount = optionalLong(
+                debugState.systemBootCount, R.string.focus_debug_value_unavailable);
+        String savedBootCount = optionalLong(
+                debugState.savedBootCount, R.string.focus_debug_not_saved);
+        String savedLastValue = optionalLong(
+                debugState.lastValue, R.string.focus_debug_not_saved);
+        String primaryParity = debugState.primaryParity == null
+                ? getString(R.string.focus_debug_not_calibrated)
+                : getString(debugState.primaryParity.intValue() == 1
+                        ? R.string.focus_debug_parity_odd
+                        : R.string.focus_debug_parity_even);
+        String anchorValue = optionalLong(
+                debugState.anchorValue, R.string.focus_debug_not_saved);
+        String anchorDisplay = debugState.anchorDisplay == null
+                ? getString(R.string.focus_debug_not_saved)
+                : Integer.toString(debugState.anchorDisplay.intValue());
+        String anchorSource = calibrationSource(debugState.anchorSource);
         String timestamp = timeFormat.format(new Date());
 
         latestReport = getString(
@@ -208,6 +227,13 @@ public final class DeveloperToolsActivity extends AppCompatActivity {
                 parity,
                 target,
                 Integer.valueOf(getActivityDisplayId()),
+                systemBootCount,
+                savedBootCount,
+                savedLastValue,
+                primaryParity,
+                anchorValue,
+                anchorDisplay,
+                anchorSource,
                 observerState,
                 Integer.valueOf(notificationCount),
                 timestamp);
@@ -219,6 +245,23 @@ public final class DeveloperToolsActivity extends AppCompatActivity {
         appendHistory(timestamp, fromObserver, value, target, readError);
         Log.i(TAG, latestReport.replace('\n', ' '));
         if (readError != null) Log.e(TAG, "Settings.System read failed", readError);
+    }
+
+    private String optionalLong(Long value, int missingText) {
+        return value == null ? getString(missingText) : Long.toString(value.longValue());
+    }
+
+    private String calibrationSource(int source) {
+        if (source == FocusChangeSetting.ANCHOR_ACTIVITY) {
+            return getString(R.string.focus_debug_anchor_activity);
+        }
+        if (source == FocusChangeSetting.ANCHOR_ACCESSIBILITY) {
+            return getString(R.string.focus_debug_anchor_accessibility);
+        }
+        if (source == FocusChangeSetting.ANCHOR_PRIVILEGED) {
+            return getString(R.string.focus_debug_anchor_privileged);
+        }
+        return getString(R.string.focus_debug_not_calibrated);
     }
 
     private int getActivityDisplayId() {

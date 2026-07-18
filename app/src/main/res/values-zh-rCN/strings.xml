@@ -201,13 +201,18 @@
     <string name="focus_debug_copy_failed">复制报告失败：%1$s</string>
     <string name="focus_debug_history_title">事件记录</string>
     <string name="focus_debug_no_events">暂无事件。</string>
-    <string name="focus_debug_instructions">将 AYN 焦点模式设为“自动”，启动实时监听后交替触摸上下屏。通知次数应增加，并显示奇数 → 主屏、偶数 → 副屏。</string>
+    <string name="focus_debug_instructions">启动实时监听后交替触摸上下屏。通知次数应持续增加，推断目标应在主屏和副屏之间交替。</string>
     <string name="focus_debug_target_primary">主屏（上屏）</string>
     <string name="focus_debug_target_secondary">副屏（下屏）</string>
     <string name="focus_debug_target_unknown">未知</string>
     <string name="focus_debug_parity_odd">奇数</string>
     <string name="focus_debug_parity_even">偶数</string>
     <string name="focus_debug_value_unavailable">不可用</string>
+    <string name="focus_debug_not_saved">未保存</string>
+    <string name="focus_debug_not_calibrated">未校正</string>
+    <string name="focus_debug_anchor_activity">应用窗口</string>
+    <string name="focus_debug_anchor_accessibility">无障碍事件</string>
+    <string name="focus_debug_anchor_privileged">系统焦点状态</string>
     <string name="focus_debug_read_success">成功</string>
     <string name="focus_debug_value_missing">键不存在或返回 -1</string>
     <string name="focus_debug_read_error">错误 · %1$s</string>
@@ -218,7 +223,7 @@
     <string name="focus_debug_source_manual">手动</string>
     <string name="focus_debug_history_line">%1$s · %2$s · 值=%3$d · %4$s</string>
     <string name="focus_debug_history_error">%1$s · %2$s · 错误 · %3$s</string>
-    <string name="focus_debug_report_format">包名：%1$s\nURI：%2$s\n读取：%3$s\n原始值：%4$d\n奇偶：%5$s\n推断目标：%6$s\n当前页面屏幕 ID：%7$d\n监听器：%8$s\n通知次数：%9$d\n最后更新：%10$s</string>
+    <string name="focus_debug_report_format">包名：%1$s\nURI：%2$s\n读取：%3$s\n原始值：%4$d\n奇偶：%5$s\n推断目标：%6$s\n当前页面屏幕 ID：%7$d\n系统开机计数：%8$s\n已保存开机计数：%9$s\n上次记值：%10$s\n主屏对应奇偶：%11$s\n校正锚点值：%12$s\n锚点屏幕 ID：%13$s\n校正来源：%14$s\n监听器：%15$s\n通知次数：%16$d\n最后更新：%17$s</string>
     <string name="check_updates">检查更新</string>
     <string name="checking_updates">正在检查…</string>
     <string name="update_available">发现新版本</string>

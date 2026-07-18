@@ -55,7 +55,7 @@ When hardware-key mode switching is disabled, the configured mode key keeps its 
 
 ## Privacy and permissions
 
-The accessibility service requests key-event filtering only. It does not retrieve window content and does not read screen text, touch input, or data from other apps.
+The accessibility service filters hardware keys and uses only the display ID attached to UI events to calibrate Follow Focus. It does not retrieve window content or read screen text, touch input, or data from other apps.
 
 - `MODIFY_AUDIO_SETTINGS` adjusts the primary media volume.
 - `VIBRATE` provides mode-change feedback.
@@ -73,7 +73,7 @@ Settings.System: secondary_screen_volume_level
 Range: 0–15
 ```
 
-Follow focus directly observes the AYN firmware’s `Settings.System: focus_change` value. It increments when focus moves between displays: odd values identify the primary (upper) display and even values identify the secondary (lower) display. Both editions can read and observe it without Shizuku or Root, and the target is locked for the duration of each volume-key press.
+Follow Focus observes the AYN firmware’s `Settings.System: focus_change` value, which increments as focus changes between displays. After a reboot, the app invalidates the old odd/even mapping and calibrates it once from a reliable display source. Standard can use the current system focus state; the app window and accessibility display events provide fallback anchors. Once calibrated, only `focus_change` is used until the next reboot. Until an anchor is available, the app safely falls back to the primary display. The target is locked for the duration of each volume-key press.
 
 Lite accesses this setting through Android's target-SDK compatibility behavior. Standard reads and writes it through either an official Shizuku UserService or a Root shell powered by [libsu](https://github.com/topjohnwu/libsu). It never uses both backends at once. Shared mode, preference, accessibility-service, and UI code lives in `app/src/main`; backend-specific code lives in `app/src/lite` and `app/src/standard`.
 

@@ -202,13 +202,18 @@
     <string name="focus_debug_copy_failed">Unable to copy report: %1$s</string>
     <string name="focus_debug_history_title">Event history</string>
     <string name="focus_debug_no_events">No events yet.</string>
-    <string name="focus_debug_instructions">With AYN Focus Mode set to Auto, start the live listener and touch the upper and lower displays alternately. Notifications should increase and show odd → Primary, even → Secondary.</string>
+    <string name="focus_debug_instructions">Start the live listener and touch the upper and lower displays alternately. Notifications should keep increasing and the inferred target should alternate between Primary and Secondary.</string>
     <string name="focus_debug_target_primary">Primary (upper display)</string>
     <string name="focus_debug_target_secondary">Secondary (lower display)</string>
     <string name="focus_debug_target_unknown">Unknown</string>
     <string name="focus_debug_parity_odd">Odd</string>
     <string name="focus_debug_parity_even">Even</string>
     <string name="focus_debug_value_unavailable">Unavailable</string>
+    <string name="focus_debug_not_saved">Not saved</string>
+    <string name="focus_debug_not_calibrated">Not calibrated</string>
+    <string name="focus_debug_anchor_activity">App window</string>
+    <string name="focus_debug_anchor_accessibility">Accessibility event</string>
+    <string name="focus_debug_anchor_privileged">System focus state</string>
     <string name="focus_debug_read_success">Success</string>
     <string name="focus_debug_value_missing">Key missing or returned -1</string>
     <string name="focus_debug_read_error">Error · %1$s</string>
@@ -219,7 +224,7 @@
     <string name="focus_debug_source_manual">manual</string>
     <string name="focus_debug_history_line">%1$s · %2$s · value=%3$d · %4$s</string>
     <string name="focus_debug_history_error">%1$s · %2$s · ERROR · %3$s</string>
-    <string name="focus_debug_report_format">Package: %1$s\nURI: %2$s\nRead: %3$s\nRaw value: %4$d\nParity: %5$s\nInferred target: %6$s\nActivity display ID: %7$d\nListener: %8$s\nNotifications: %9$d\nLast update: %10$s</string>
+    <string name="focus_debug_report_format">Package: %1$s\nURI: %2$s\nRead: %3$s\nRaw value: %4$d\nParity: %5$s\nInferred target: %6$s\nActivity display ID: %7$d\nSystem boot count: %8$s\nSaved boot count: %9$s\nLast recorded value: %10$s\nPrimary display parity: %11$s\nCalibration anchor value: %12$s\nAnchor display ID: %13$s\nCalibration source: %14$s\nListener: %15$s\nNotifications: %16$d\nLast update: %17$s</string>
     <string name="check_updates">Check for updates</string>
     <string name="checking_updates">Checking…</string>
     <string name="update_available">Update available</string>

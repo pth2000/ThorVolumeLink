@@ -32,7 +32,7 @@ final class EditionBackend {
     private static final int OPERATION_SET = 1;
     private static final int OPERATION_ADJUST = 2;
     /** UserService 实现变化时递增，确保同 versionCode 的开发包也会替换旧 daemon。 */
-    private static final int USER_SERVICE_IMPLEMENTATION_VERSION = 2;
+    private static final int USER_SERVICE_IMPLEMENTATION_VERSION = 3;
 
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final ExecutorService WORKER = Executors.newSingleThreadExecutor();
@@ -241,6 +241,58 @@ final class EditionBackend {
     static void adjust(final Context context, int delta, final SecondaryVolumeCallback callback) {
         if (isRootSelected(context)) RootBackend.adjust(context, delta, callback);
         else runShizuku(context, OPERATION_ADJUST, delta, callback);
+    }
+
+    static boolean canReadFocusedDisplay() { return true; }
+
+    static void readFocusedDisplay(final Context context,
+                                   final SecondaryVolumeCallback callback) {
+        if (isRootSelected(context)) {
+            RootBackend.readFocusedDisplay(context, callback);
+            return;
+        }
+        ensureVolumeService(context, new ServiceReadyCallback() {
+            @Override public void onReady(boolean ready, String error) {
+                if (!ready) {
+                    complete(callback, false, -1, error);
+                    return;
+                }
+                WORKER.execute(new Runnable() {
+                    @Override public void run() {
+                        if (isRootSelected(context)) {
+                            complete(callback, false, -1,
+                                    context.getString(R.string.backend_changed));
+                            return;
+                        }
+                        ISecondaryVolumeService service;
+                        synchronized (LOCK) {
+                            service = volumeService;
+                        }
+                        if (!isServiceAlive(service)) {
+                            complete(callback, false, -1,
+                                    "Shizuku volume service is not connected");
+                            return;
+                        }
+                        try {
+                            Bundle result = service.getFocusedDisplay();
+                            if (SecondaryVolumeResult.isSuccess(result)) {
+                                complete(callback, true, SecondaryVolumeResult.value(result), "");
+                            } else {
+                                complete(callback, false, -1,
+                                        SecondaryVolumeResult.error(result));
+                            }
+                        } catch (Throwable error) {
+                            synchronized (LOCK) {
+                                if (volumeService == service) volumeService = null;
+                            }
+                            notifyStatus();
+                            complete(callback, false, -1,
+                                    SecondaryVolumeResult.format(error));
+                        }
+                    }
+                });
+            }
+        });
     }
 
     /** 读取 Settings.System 不需要 Shizuku 授权，且会自动对应应用当前用户。 */

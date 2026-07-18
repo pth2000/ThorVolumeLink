@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
  */
 public final class SecondaryVolumeUserService extends ISecondaryVolumeService.Stub {
     private static final String SETTINGS = "/system/bin/settings";
+    private static final String DUMPSYS = "/system/bin/dumpsys";
     private static final String KEY = VolumeControl.SECONDARY_SETTING_KEY;
 
     /** 保证并发 Binder 请求中的“读取后增减再写入”是一个原子区段。 */
@@ -54,6 +55,18 @@ public final class SecondaryVolumeUserService extends ISecondaryVolumeService.St
                 int target = clamp(readSetting() + delta);
                 writeSetting(target);
                 return SecondaryVolumeResult.success(target);
+            } catch (Throwable error) {
+                return SecondaryVolumeResult.failure(error);
+            }
+        }
+    }
+
+    @Override
+    public Bundle getFocusedDisplay() {
+        synchronized (lock) {
+            try {
+                return SecondaryVolumeResult.success(FocusedDisplayParser.parse(
+                        run(new String[] { DUMPSYS, "input" })));
             } catch (Throwable error) {
                 return SecondaryVolumeResult.failure(error);
             }

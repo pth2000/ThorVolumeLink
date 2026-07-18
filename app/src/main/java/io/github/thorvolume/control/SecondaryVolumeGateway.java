@@ -28,4 +28,6 @@ final class SecondaryVolumeGateway {
     static void read(Context context, SecondaryVolumeCallback callback) { EditionBackend.read(context, callback); }
     static void set(Context context, int value, SecondaryVolumeCallback callback) { EditionBackend.set(context, value, callback); }
     static void adjust(Context context, int delta, SecondaryVolumeCallback callback) { EditionBackend.adjust(context, delta, callback); }
+    static boolean canReadFocusedDisplay() { return EditionBackend.canReadFocusedDisplay(); }
+    static void readFocusedDisplay(Context context, SecondaryVolumeCallback callback) { EditionBackend.readFocusedDisplay(context, callback); }
 }

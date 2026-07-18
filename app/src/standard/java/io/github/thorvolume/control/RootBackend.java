@@ -122,6 +122,41 @@ final class RootBackend {
         }, callback);
     }
 
+    static void readFocusedDisplay(final Context context,
+                                   final SecondaryVolumeCallback callback) {
+        final Context app = context.getApplicationContext();
+        WORKER.execute(new Runnable() {
+            @Override public void run() {
+                if (!isSelected(app)) {
+                    complete(callback, false, -1, app.getString(R.string.backend_changed));
+                    return;
+                }
+                try {
+                    Shell shell = Shell.getCachedShell();
+                    if ((shell == null || !shell.isAlive())
+                            && Boolean.TRUE.equals(Shell.isAppGrantedRoot())) {
+                        shell = Shell.getShell();
+                    }
+                    if (shell == null || !shell.isAlive() || !shell.isRoot()) {
+                        complete(callback, false, -1,
+                                app.getString(R.string.root_permission_denied));
+                        return;
+                    }
+                    Shell.Result result = shell.newJob().add("/system/bin/dumpsys input").exec();
+                    ensureSuccess(result);
+                    StringBuilder dump = new StringBuilder();
+                    for (String line : result.getOut()) {
+                        if (dump.length() > 0) dump.append('\n');
+                        dump.append(line);
+                    }
+                    complete(callback, true, FocusedDisplayParser.parse(dump.toString()), "");
+                } catch (Throwable error) {
+                    complete(callback, false, -1, SecondaryVolumeResult.format(error));
+                }
+            }
+        });
+    }
+
     static void release() {
         try {
             Shell shell = Shell.getCachedShell();
