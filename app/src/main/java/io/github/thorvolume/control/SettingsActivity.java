@@ -27,6 +27,7 @@ public final class SettingsActivity extends AppCompatActivity {
     private SwitchCompat modeKeyEnabled;
     private SwitchCompat visualFeedback;
     private SwitchCompat vibrationFeedback;
+    private SwitchCompat linkedAutoFollow;
     private TextView visualFeedbackSummary;
     private TextView vibrationFeedbackSummary;
     private TextView modeKeySummary;
@@ -60,6 +61,7 @@ public final class SettingsActivity extends AppCompatActivity {
         modeKeyEnabled = (SwitchCompat) findViewById(R.id.mode_key_enabled);
         visualFeedback = (SwitchCompat) findViewById(R.id.visual_feedback);
         vibrationFeedback = (SwitchCompat) findViewById(R.id.vibration_feedback);
+        linkedAutoFollow = (SwitchCompat) findViewById(R.id.linked_auto_follow);
         visualFeedbackSummary = (TextView) findViewById(R.id.visual_feedback_summary);
         vibrationFeedbackSummary = (TextView) findViewById(R.id.vibration_feedback_summary);
         modeKeySummary = (TextView) findViewById(R.id.mode_key_summary);
@@ -72,6 +74,7 @@ public final class SettingsActivity extends AppCompatActivity {
         changeHold = (Button) findViewById(R.id.change_hold);
 
         modeKeyEnabled.setChecked(Prefs.isModeKeyEnabled(this));
+        linkedAutoFollow.setChecked(Prefs.isLinkedAutoFollowEnabled(this));
         modeKeyEnabled.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 Prefs.setModeKeyEnabled(SettingsActivity.this, isChecked);
@@ -88,6 +91,14 @@ public final class SettingsActivity extends AppCompatActivity {
             @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 Prefs.setVibrationFeedbackEnabled(SettingsActivity.this, isChecked);
                 refreshVibrationFeedback();
+            }
+        });
+        linkedAutoFollow.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Prefs.setLinkedAutoFollowEnabled(SettingsActivity.this, isChecked);
+                if (isChecked && Prefs.getMode(SettingsActivity.this) == Prefs.MODE_SYNC) {
+                    VolumeControl.syncSecondaryToMain(SettingsActivity.this, false, null);
+                }
             }
         });
         findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
@@ -177,6 +188,8 @@ public final class SettingsActivity extends AppCompatActivity {
         if (modeKeyEnabled == null) return;
         boolean enabled = Prefs.isModeKeyEnabled(this);
         if (modeKeyEnabled.isChecked() != enabled) modeKeyEnabled.setChecked(enabled);
+        boolean autoFollow = Prefs.isLinkedAutoFollowEnabled(this);
+        if (linkedAutoFollow.isChecked() != autoFollow) linkedAutoFollow.setChecked(autoFollow);
         refreshKeyControls();
         refreshVisualFeedback();
         refreshVibrationFeedback();
@@ -237,10 +250,10 @@ public final class SettingsActivity extends AppCompatActivity {
 
     private void beginCapture() {
         if (!isAccessibilityEnabled()) Ui.toast(this, getString(R.string.key_capture_accessibility_hint));
-        Prefs.beginCapture(this);
         handler.removeCallbacks(capturePoll);
         closeCaptureDialog();
-        captureDialog = new AlertDialog.Builder(this)
+        Prefs.beginCapture(this);
+        final AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.key_capture_title)
                 .setMessage(R.string.key_capture_message)
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -250,14 +263,28 @@ public final class SettingsActivity extends AppCompatActivity {
                     }
                 })
                 .create();
-        captureDialog.show();
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override public void onDismiss(DialogInterface ignored) {
+                handler.removeCallbacks(capturePoll);
+                // 点击对话框外、返回或页面销毁都属于取消录入。
+                if (Prefs.getCaptureTarget(SettingsActivity.this) != Prefs.CAPTURE_NONE) {
+                    Prefs.cancelCapture(SettingsActivity.this);
+                }
+                if (captureDialog == dialog) captureDialog = null;
+                refreshState();
+            }
+        });
+        captureDialog = dialog;
+        dialog.setCanceledOnTouchOutside(true);
+        dialog.show();
         handler.postDelayed(capturePoll, 180L);
     }
 
     private void closeCaptureDialog() {
         if (captureDialog != null) {
-            try { captureDialog.dismiss(); } catch (Throwable ignored) {}
+            AlertDialog dialog = captureDialog;
             captureDialog = null;
+            try { dialog.dismiss(); } catch (Throwable ignored) {}
         }
     }
 

@@ -34,6 +34,7 @@ final class Prefs {
     private static final String KEY_MODE = "mode";
     private static final String KEY_HOLD_MS = "hold_ms";
     private static final String KEY_STEP = "volume_step";
+    private static final String KEY_LINKED_AUTO_FOLLOW = "linked_auto_follow";
     private static final String KEY_LAST_ERROR = "last_error";
     private static final String KEY_CAPTURE_TARGET = "capture_target";
     private static final String KEY_SWITCH_CODE = "switch_key_code";
@@ -272,6 +273,23 @@ final class Prefs {
         }
     }
 
+    /** 联动模式下，是否监听所有主屏媒体音量变化并自动同步副屏。 */
+    static boolean isLinkedAutoFollowEnabled(Context context) {
+        try {
+            return prefs(context).getBoolean(KEY_LINKED_AUTO_FOLLOW, false);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    static void setLinkedAutoFollowEnabled(Context context, boolean enabled) {
+        try {
+            prefs(context).edit().putBoolean(KEY_LINKED_AUTO_FOLLOW, enabled).apply();
+        } catch (Throwable error) {
+            recordError(context, context.getString(R.string.error_save_linked_auto_follow), error);
+        }
+    }
+
     static void resetControlSettings(Context context) {
         try {
             prefs(context).edit()
@@ -279,6 +297,7 @@ final class Prefs {
                     .putInt(KEY_SWITCH_SCAN, 0)
                     .putInt(KEY_HOLD_MS, 800)
                     .putInt(KEY_STEP, 1)
+                    .putBoolean(KEY_LINKED_AUTO_FOLLOW, false)
                     .putBoolean(KEY_MODE_KEY_ENABLED, true)
                     .putBoolean(KEY_VISUAL_FEEDBACK_ENABLED, true)
                     .putBoolean(KEY_VIBRATION_FEEDBACK_ENABLED, true)

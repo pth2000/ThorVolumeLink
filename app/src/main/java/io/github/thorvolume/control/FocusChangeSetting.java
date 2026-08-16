@@ -19,7 +19,7 @@ final class FocusChangeSetting {
     private static final String STATE_ANCHOR_VALUE = "anchor_value";
     private static final String STATE_ANCHOR_DISPLAY = "anchor_display";
     private static final String STATE_ANCHOR_SOURCE = "anchor_source";
-    private static final int MAPPING_VERSION = 3;
+    private static final int MAPPING_VERSION = 4;
     private static final long MISSING_BOOT_COUNT = Long.MIN_VALUE;
     private static final int MISSING_PARITY = -1;
     private static final int MISSING_DISPLAY = -1;
@@ -102,24 +102,40 @@ final class FocusChangeSetting {
             Context context, int displayId, int anchorSource) {
         if (context == null || displayId < 0) return;
         long value = read(context);
-        if (!isAvailable(value)) return;
+        calibrateFromDisplay(context, displayId, anchorSource, value);
+    }
+
+    /** 使用已经与屏幕快照核对过的计数校正，避免方法内部再次读取造成竞态。 */
+    static synchronized boolean calibrateFromDisplay(
+            Context context, int displayId, int anchorSource, long value) {
+        if (context == null || displayId < 0 || !isAvailable(value)) return false;
         observe(context, value);
 
         int valueParity = parity(value);
         int primaryParity = displayId == Display.DEFAULT_DISPLAY
                 ? valueParity : valueParity ^ 1;
         SharedPreferences values = state(context);
-        if (values.getInt(STATE_PRIMARY_PARITY, MISSING_PARITY) == primaryParity) {
-            int existingSource = values.getInt(STATE_ANCHOR_SOURCE, ANCHOR_NONE);
+        int existingParity = values.getInt(STATE_PRIMARY_PARITY, MISSING_PARITY);
+        int existingSource = values.getInt(STATE_ANCHOR_SOURCE, ANCHOR_NONE);
+        int incomingPriority = anchorPriority(anchorSource);
+        int existingPriority = anchorPriority(existingSource);
+
+        // 较弱来源不得覆盖较可靠的结果；同级来源相互矛盾时也保留首次结果。
+        if (isParity(existingParity)
+                && (incomingPriority < existingPriority
+                || (incomingPriority == existingPriority
+                && existingParity != primaryParity))) {
+            return false;
+        }
+        if (existingParity == primaryParity) {
             SharedPreferences.Editor confirmation = values.edit().putLong(STATE_LAST_VALUE, value);
-            // 系统焦点查询可以覆盖同结果的间接锚点，让诊断页能确认 Standard 复核成功。
-            if (anchorPriority(anchorSource) > anchorPriority(existingSource)) {
+            if (incomingPriority > existingPriority) {
                 confirmation.putLong(STATE_ANCHOR_VALUE, value)
                         .putInt(STATE_ANCHOR_DISPLAY, displayId)
                         .putInt(STATE_ANCHOR_SOURCE, anchorSource);
             }
             confirmation.apply();
-            return;
+            return true;
         }
         values.edit()
                 .putLong(STATE_BOOT_COUNT, readBootCount(context))
@@ -130,6 +146,19 @@ final class FocusChangeSetting {
                 .putInt(STATE_ANCHOR_DISPLAY, displayId)
                 .putInt(STATE_ANCHOR_SOURCE, anchorSource)
                 .apply();
+        return true;
+    }
+
+    /** 当前映射缺失，或指定来源比现有锚点更可靠时，需要继续校正。 */
+    static synchronized boolean needsCalibrationFrom(
+            Context context, long value, int anchorSource) {
+        if (!isAvailable(value)) return true;
+        observe(context, value);
+        SharedPreferences values = state(context);
+        int existingParity = values.getInt(STATE_PRIMARY_PARITY, MISSING_PARITY);
+        if (!isParity(existingParity)) return true;
+        int existingSource = values.getInt(STATE_ANCHOR_SOURCE, ANCHOR_NONE);
+        return anchorPriority(anchorSource) > anchorPriority(existingSource);
     }
 
     static synchronized boolean isCalibrated(Context context, long value) {

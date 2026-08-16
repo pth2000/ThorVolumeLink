@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.Vibrator;
+import android.view.Display;
 import android.view.KeyEvent;
 import android.view.ViewConfiguration;
 import android.view.accessibility.AccessibilityEvent;
@@ -30,7 +31,7 @@ public final class ThorKeyService extends AccessibilityService {
     private static final String ACTION_VOLUME_CHANGED = "android.media.VOLUME_CHANGED_ACTION";
     private static final String EXTRA_VOLUME_STREAM_TYPE =
             "android.media.EXTRA_VOLUME_STREAM_TYPE";
-    private static final long SCREEN_OFF_SYNC_WAKE_MS = 5000L;
+    private static final long LINKED_SYNC_WAKE_MS = 5000L;
     /** 等待厂商 focus_change 写入与窗口事件收敛，避免把新屏幕与旧计数配对。 */
     private static final long FOCUS_CALIBRATION_SETTLE_MS = 180L;
 
@@ -57,15 +58,17 @@ public final class ThorKeyService extends AccessibilityService {
     private boolean focusCalibrationInFlight;
     private boolean focusCalibrationPending;
     private int pendingAccessibilityDisplay = -1;
+    /** 两种候选奇偶映射分别从哪些屏幕取得过一致的直接交互证据。 */
+    private final int[] accessibilityEvidence = new int[2];
     private boolean volumeReceiverRegistered;
-    private boolean screenOffSyncInFlight;
-    private int pendingScreenOffSecondary = -1;
-    private int appliedScreenOffSecondary = -1;
-    private PowerManager.WakeLock screenOffSyncWakeLock;
+    private boolean linkedSyncInFlight;
+    private int linkedSyncTarget = -1;
+    private int pendingLinkedSecondary = -1;
+    private PowerManager.WakeLock linkedSyncWakeLock;
 
     /**
-     * 熄屏时系统不会把音量键送入无障碍过滤链，但仍会改变媒体音量。
-     * 联动模式通过监听这个结果，把最新的绝对值补同步到副屏。
+     * 系统媒体音量变化广播既用于补偿熄屏按键，也可在用户启用自动跟随时
+     * 覆盖音量面板、媒体应用等非本服务发起的主屏音量变化。
      */
     private final BroadcastReceiver volumeChangedReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context context, Intent intent) {
@@ -73,8 +76,9 @@ public final class ThorKeyService extends AccessibilityService {
             int stream = intent.getIntExtra(EXTRA_VOLUME_STREAM_TYPE, -1);
             if (stream != AudioManager.STREAM_MUSIC) return;
             if (Prefs.getMode(ThorKeyService.this) != Prefs.MODE_SYNC) return;
-            if (isDeviceInteractive()) return;
-            requestScreenOffSync();
+            boolean interactive = isDeviceInteractive();
+            if (interactive && !Prefs.isLinkedAutoFollowEnabled(ThorKeyService.this)) return;
+            requestLinkedSync(!interactive);
         }
     };
 
@@ -118,11 +122,21 @@ public final class ThorKeyService extends AccessibilityService {
             try {
                 focusChangeValue = FocusChangeSetting.read(ThorKeyService.this);
                 FocusChangeSetting.observe(ThorKeyService.this, focusChangeValue);
-                if (FocusChangeSetting.isCalibrated(
-                        ThorKeyService.this, focusChangeValue)) return;
-                FocusChangeSetting.calibrateFromDisplay(
-                        ThorKeyService.this, displayId,
-                        FocusChangeSetting.ANCHOR_ACCESSIBILITY);
+                if (!FocusChangeSetting.needsCalibrationFrom(
+                        ThorKeyService.this, focusChangeValue,
+                        FocusChangeSetting.ANCHOR_ACCESSIBILITY)) return;
+                int valueParity = (int) (focusChangeValue & 1L);
+                int primaryParity = displayId == Display.DEFAULT_DISPLAY
+                        ? valueParity : valueParity ^ 1;
+                int displayEvidence = displayId == Display.DEFAULT_DISPLAY ? 1 : 2;
+                accessibilityEvidence[primaryParity] |= displayEvidence;
+                // 单次界面事件可能来自过渡窗口；上下屏都支持同一映射后才接受。
+                if (accessibilityEvidence[primaryParity] == 3) {
+                    FocusChangeSetting.calibrateFromDisplay(
+                            ThorKeyService.this, displayId,
+                            FocusChangeSetting.ANCHOR_ACCESSIBILITY,
+                            focusChangeValue);
+                }
             } catch (Throwable error) {
                 recordFocusChangeError(error);
             }
@@ -136,6 +150,10 @@ public final class ThorKeyService extends AccessibilityService {
         if (feedbackOverlay != null) feedbackOverlay.destroy();
         feedbackOverlay = new FeedbackOverlay(this);
         registerVolumeReceiver();
+        if (Prefs.getMode(this) == Prefs.MODE_SYNC
+                && Prefs.isLinkedAutoFollowEnabled(this)) {
+            requestLinkedSync(false);
+        }
         startFocusChangeTracking();
     }
 
@@ -294,7 +312,7 @@ public final class ThorKeyService extends AccessibilityService {
         return FocusChangeSetting.volumeMode(this, focusChangeValue);
     }
 
-    /** 注册 AYN 焦点计数器监听；不再依赖无障碍窗口或触摸事件推断屏幕。 */
+    /** 注册 AYN 焦点计数器监听；屏幕奇偶映射由分级校正来源提供。 */
     private void startFocusChangeTracking() {
         focusChangeObserver = new ContentObserver(handler) {
             @Override public void onChange(boolean selfChange) {
@@ -319,16 +337,18 @@ public final class ThorKeyService extends AccessibilityService {
         try {
             focusChangeValue = FocusChangeSetting.read(this);
             FocusChangeSetting.observe(this, focusChangeValue);
+            boolean needsAccessibility = FocusChangeSetting.needsCalibrationFrom(
+                    this, focusChangeValue, FocusChangeSetting.ANCHOR_ACCESSIBILITY);
             boolean calibrated = FocusChangeSetting.isCalibrated(this, focusChangeValue);
-            if (!calibrated && pendingAccessibilityDisplay >= 0 && handler != null) {
+            if (needsAccessibility && pendingAccessibilityDisplay >= 0 && handler != null) {
                 handler.removeCallbacks(accessibilityFocusCalibration);
                 handler.postDelayed(accessibilityFocusCalibration, FOCUS_CALIBRATION_SETTLE_MS);
-            } else if (calibrated && pendingAccessibilityDisplay >= 0) {
+            } else if (!needsAccessibility && pendingAccessibilityDisplay >= 0) {
                 if (handler != null) handler.removeCallbacks(accessibilityFocusCalibration);
                 pendingAccessibilityDisplay = -1;
             }
             if (!calibrated && Prefs.getMode(this) == Prefs.MODE_FOCUS) {
-                requestPrivilegedFocusCalibration();
+                ensurePrivilegedFocusCalibration();
             }
             focusChangeErrorRecorded = false;
         } catch (Throwable error) {
@@ -353,13 +373,16 @@ public final class ThorKeyService extends AccessibilityService {
         focusChangeObserver = null;
         if (handler != null) handler.removeCallbacks(accessibilityFocusCalibration);
         pendingAccessibilityDisplay = -1;
+        accessibilityEvidence[0] = 0;
+        accessibilityEvidence[1] = 0;
         focusCalibrationInFlight = false;
         focusCalibrationPending = false;
     }
 
-    /** 已有映射时不再启动系统查询；校正失败后可由后续事件再次尝试。 */
+    /** 缺少可靠映射时启动系统查询；Lite 版会直接返回。 */
     private void ensurePrivilegedFocusCalibration() {
-        if (FocusChangeSetting.isCalibrated(this, focusChangeValue)) return;
+        if (!FocusChangeSetting.needsCalibrationFrom(
+                this, focusChangeValue, FocusChangeSetting.ANCHOR_PRIVILEGED)) return;
         requestPrivilegedFocusCalibration();
     }
 
@@ -372,15 +395,24 @@ public final class ThorKeyService extends AccessibilityService {
         }
         focusCalibrationInFlight = true;
         focusCalibrationPending = false;
+        final long valueBefore = FocusChangeSetting.read(this);
         SecondaryVolumeGateway.readFocusedDisplay(this, new SecondaryVolumeCallback() {
             @Override public void onComplete(boolean ok, int displayId, String error) {
                 focusCalibrationInFlight = false;
-                if (ok && displayId >= 0) {
+                boolean retry = focusCalibrationPending;
+                focusCalibrationPending = false;
+                long valueAfter = FocusChangeSetting.read(ThorKeyService.this);
+                focusChangeValue = valueAfter;
+                if (ok && displayId >= 0 && valueBefore == valueAfter
+                        && FocusChangeSetting.isAvailable(valueAfter)) {
                     FocusChangeSetting.calibrateFromDisplay(
                             ThorKeyService.this, displayId,
-                            FocusChangeSetting.ANCHOR_PRIVILEGED);
+                            FocusChangeSetting.ANCHOR_PRIVILEGED, valueAfter);
+                } else if (ok && displayId >= 0) {
+                    // 查询期间发生焦点切换，丢弃不一致快照并在稳定后重试。
+                    retry = true;
                 }
-                if (focusCalibrationPending) requestPrivilegedFocusCalibration();
+                if (retry) ensurePrivilegedFocusCalibration();
             }
         });
     }
@@ -410,62 +442,60 @@ public final class ThorKeyService extends AccessibilityService {
         }
     }
 
-    private void requestScreenOffSync() {
+    private void requestLinkedSync(boolean keepAwake) {
         int main = VolumeControl.readMain(this);
         int max = VolumeControl.mainMax(this);
-        pendingScreenOffSecondary = (int) Math.round(
+        int target = (int) Math.round(
                 (main * (double) VolumeControl.SECONDARY_MAX) / Math.max(1, max));
-        refreshScreenOffSyncWakeLock();
-        drainScreenOffSync();
+        // 若最新目标与正在写入的目标相同，无需再追加一次相同写入。
+        pendingLinkedSecondary = linkedSyncInFlight && target == linkedSyncTarget ? -1 : target;
+        if (keepAwake) refreshLinkedSyncWakeLock();
+        drainLinkedSync();
     }
 
-    /** 连续按键只保留最新目标，避免 Shizuku/Root 写入队列在长按时不断堆积。 */
-    private void drainScreenOffSync() {
-        if (screenOffSyncInFlight) return;
-        if (Prefs.getMode(this) != Prefs.MODE_SYNC || pendingScreenOffSecondary < 0) {
-            finishScreenOffSync();
+    /** 连续变化只保留最新目标，避免 Shizuku/Root 写入队列不断堆积。 */
+    private void drainLinkedSync() {
+        if (linkedSyncInFlight) return;
+        if (Prefs.getMode(this) != Prefs.MODE_SYNC || pendingLinkedSecondary < 0) {
+            finishLinkedSync();
             return;
         }
-        final int target = pendingScreenOffSecondary;
-        pendingScreenOffSecondary = -1;
-        if (target == appliedScreenOffSecondary) {
-            finishScreenOffSync();
-            return;
-        }
-        screenOffSyncInFlight = true;
+        final int target = pendingLinkedSecondary;
+        pendingLinkedSecondary = -1;
+        linkedSyncInFlight = true;
+        linkedSyncTarget = target;
         VolumeControl.setSecondary(this, target, false, new VolumeControl.VolumeCallback() {
             @Override public void onComplete(boolean ok, int value, String error) {
-                screenOffSyncInFlight = false;
-                if (ok) appliedScreenOffSecondary = value;
-                if (pendingScreenOffSecondary >= 0
-                        && pendingScreenOffSecondary != appliedScreenOffSecondary) {
-                    drainScreenOffSync();
+                linkedSyncInFlight = false;
+                linkedSyncTarget = -1;
+                if (pendingLinkedSecondary >= 0) {
+                    drainLinkedSync();
                 } else {
-                    finishScreenOffSync();
+                    finishLinkedSync();
                 }
             }
         });
     }
 
-    private void refreshScreenOffSyncWakeLock() {
+    private void refreshLinkedSyncWakeLock() {
         try {
-            if (screenOffSyncWakeLock == null) {
+            if (linkedSyncWakeLock == null) {
                 PowerManager power = (PowerManager) getSystemService(Context.POWER_SERVICE);
                 if (power == null) return;
-                screenOffSyncWakeLock = power.newWakeLock(
-                        PowerManager.PARTIAL_WAKE_LOCK, "ThorVolumeLink:screenOffSync");
-                screenOffSyncWakeLock.setReferenceCounted(false);
+                linkedSyncWakeLock = power.newWakeLock(
+                        PowerManager.PARTIAL_WAKE_LOCK, "ThorVolumeLink:linkedSync");
+                linkedSyncWakeLock.setReferenceCounted(false);
             }
-            if (screenOffSyncWakeLock.isHeld()) screenOffSyncWakeLock.release();
-            screenOffSyncWakeLock.acquire(SCREEN_OFF_SYNC_WAKE_MS);
+            if (linkedSyncWakeLock.isHeld()) linkedSyncWakeLock.release();
+            linkedSyncWakeLock.acquire(LINKED_SYNC_WAKE_MS);
         } catch (Throwable ignored) {}
     }
 
-    private void finishScreenOffSync() {
-        pendingScreenOffSecondary = -1;
+    private void finishLinkedSync() {
+        pendingLinkedSecondary = -1;
         try {
-            if (screenOffSyncWakeLock != null && screenOffSyncWakeLock.isHeld()) {
-                screenOffSyncWakeLock.release();
+            if (linkedSyncWakeLock != null && linkedSyncWakeLock.isHeld()) {
+                linkedSyncWakeLock.release();
             }
         } catch (Throwable ignored) {}
     }
@@ -521,8 +551,13 @@ public final class ThorKeyService extends AccessibilityService {
 
     /** 只取事件来源屏幕 ID 并延迟与计数配对，不读取窗口内容。 */
     @Override public void onAccessibilityEvent(AccessibilityEvent event) {
-        if (event == null || Build.VERSION.SDK_INT < 30) return;
-        if (FocusChangeSetting.isCalibrated(this, focusChangeValue)) return;
+        if (event == null || Build.VERSION.SDK_INT < 33) return;
+        int type = event.getEventType();
+        if (type != AccessibilityEvent.TYPE_VIEW_CLICKED
+                && type != AccessibilityEvent.TYPE_VIEW_SCROLLED) return;
+        if (!FocusChangeSetting.needsCalibrationFrom(
+                this, focusChangeValue,
+                FocusChangeSetting.ANCHOR_ACCESSIBILITY)) return;
         int displayId = event.getDisplayId();
         if (displayId < 0) return;
         pendingAccessibilityDisplay = displayId;
@@ -547,7 +582,7 @@ public final class ThorKeyService extends AccessibilityService {
             } catch (Throwable ignored) {}
             volumeReceiverRegistered = false;
         }
-        finishScreenOffSync();
+        finishLinkedSync();
         if (feedbackOverlay != null) {
             feedbackOverlay.destroy();
             feedbackOverlay = null;

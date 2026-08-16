@@ -12,6 +12,7 @@ Thor Volume Link is an open-source volume controller for the dual-screen AYN Tho
 
 - Primary, secondary, linked, and follow-focus volume-key modes
 - Direct control and proportional synchronization of the secondary-screen volume
+- Optional automatic following for primary-volume changes made through Android or other apps
 - Optional hardware-key mode switching with configurable key behavior
 - Live primary and secondary volume status
 
@@ -21,7 +22,7 @@ Thor Volume Link is an open-source volume controller for the dual-screen AYN Tho
 | --- | --- |
 | Primary | Keeps Android's native volume-key behavior, adjusts only the primary media volume, and shows the system volume panel. |
 | Secondary | Lets the app handle the volume keys and adjust only the secondary-screen volume without changing the primary volume. |
-| Linked | Adjusts the primary media volume and maps the secondary screen to the same relative percentage. For example, 50% on the primary screen becomes approximately 50% on the secondary screen. |
+| Linked | Adjusts the primary media volume and maps the secondary screen to the same relative percentage. Optional automatic following also synchronizes changes made through Android or other apps. |
 | Follow focus | Controls the most recently interacted-with display: the upper display uses primary volume and the lower display uses secondary volume. The target remains fixed while a volume key is held. |
 
 All four modes support short presses and native-style press-and-hold adjustment. **Adjustment step** under **Settings → Key & controls** applies when the app handles the hardware volume keys: in Secondary and Linked modes, and when Follow focus targets the lower display. Primary mode and Follow focus on the upper display retain Android's native step size. When the hardware mode key is enabled, holding it cycles through the modes; otherwise, modes remain selectable from the app's main screen.

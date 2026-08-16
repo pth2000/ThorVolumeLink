@@ -19,6 +19,7 @@ import java.util.Locale;
 /** 应用的主控制面板，集中展示当前模式、实时音量和服务状态。 */
 public final class MainActivity extends AppCompatActivity {
     private static final long LIVE_REFRESH_MS = 800L;
+    private static final long FOCUS_CALIBRATION_SETTLE_MS = 250L;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -57,6 +58,27 @@ public final class MainActivity extends AppCompatActivity {
             refreshState();
             refreshVolumes();
             handler.postDelayed(this, LIVE_REFRESH_MS);
+        }
+    };
+
+    /** 等待窗口焦点与厂商计数稳定后，再用应用窗口纠正较弱的无障碍锚点。 */
+    private final Runnable calibrateFocusedWindow = new Runnable() {
+        @Override public void run() {
+            if (!resumed || !hasWindowFocus()) return;
+            try {
+                long focusChange = FocusChangeSetting.read(MainActivity.this);
+                if (!FocusChangeSetting.needsCalibrationFrom(
+                        MainActivity.this, focusChange,
+                        FocusChangeSetting.ANCHOR_ACTIVITY)) return;
+                Display display = getWindow().getDecorView().getDisplay();
+                if (display != null) {
+                    FocusChangeSetting.calibrateFromDisplay(
+                            MainActivity.this, display.getDisplayId(),
+                            FocusChangeSetting.ANCHOR_ACTIVITY, focusChange);
+                }
+            } catch (Throwable ignored) {
+                // 服务仍可通过其他屏幕来源完成校正。
+            }
         }
     };
 
@@ -142,23 +164,16 @@ public final class MainActivity extends AppCompatActivity {
     @Override protected void onPause() {
         resumed = false;
         handler.removeCallbacks(liveRefresh);
+        handler.removeCallbacks(calibrateFocusedWindow);
         SecondaryVolumeGateway.setStatusListener(null);
         super.onPause();
     }
 
     @Override public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (!hasFocus) return;
-        try {
-            long focusChange = FocusChangeSetting.read(this);
-            FocusChangeSetting.observe(this, focusChange);
-            if (FocusChangeSetting.isCalibrated(this, focusChange)) return;
-            Display display = getWindow().getDecorView().getDisplay();
-            if (display != null) {
-                FocusChangeSetting.calibrateFromDisplay(this, display.getDisplayId());
-            }
-        } catch (Throwable ignored) {
-            // 服务仍会使用开机计数完成自动校正。
+        handler.removeCallbacks(calibrateFocusedWindow);
+        if (hasFocus) {
+            handler.postDelayed(calibrateFocusedWindow, FOCUS_CALIBRATION_SETTLE_MS);
         }
     }
 
