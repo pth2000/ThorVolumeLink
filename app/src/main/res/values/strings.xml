@@ -47,6 +47,8 @@
     <string name="volume_step_value">Adjustment step\n%1$d level(s)</string>
     <string name="linked_auto_follow">Follow primary volume automatically</string>
     <string name="linked_auto_follow_summary">In Linked mode, also mirror primary media-volume changes made by Android or other apps.</string>
+    <string name="linked_system_volume_ui">Show the system volume panel</string>
+    <string name="linked_system_volume_ui_summary">In Linked mode, ask Android to show its built-in volume panel. Turn this off when using a custom volume-panel app.</string>
     <string name="change">Change</string>
     <string name="adjust">Adjust</string>
     <string name="reset_controls">Restore default control settings</string>
@@ -65,6 +67,7 @@
     <string name="step_plain">%1$d levels</string>
     <string name="step_fast">5 levels (fast)</string>
     <string name="error_save_linked_auto_follow">Unable to save automatic volume following</string>
+    <string name="error_save_linked_system_volume_ui">Unable to save the system volume-panel setting</string>
 
     <string name="section_volume">Live volume</string>
     <string name="volume_description">Values refresh automatically while this screen is open.</string>

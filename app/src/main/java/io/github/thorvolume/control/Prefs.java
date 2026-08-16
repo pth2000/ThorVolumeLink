@@ -35,6 +35,7 @@ final class Prefs {
     private static final String KEY_HOLD_MS = "hold_ms";
     private static final String KEY_STEP = "volume_step";
     private static final String KEY_LINKED_AUTO_FOLLOW = "linked_auto_follow";
+    private static final String KEY_LINKED_SYSTEM_VOLUME_UI = "linked_system_volume_ui";
     private static final String KEY_LAST_ERROR = "last_error";
     private static final String KEY_CAPTURE_TARGET = "capture_target";
     private static final String KEY_SWITCH_CODE = "switch_key_code";
@@ -290,6 +291,24 @@ final class Prefs {
         }
     }
 
+    /** 联动模式调整主屏音量时，是否主动请求 Android 显示系统音量面板。 */
+    static boolean isLinkedSystemVolumeUiEnabled(Context context) {
+        try {
+            return prefs(context).getBoolean(KEY_LINKED_SYSTEM_VOLUME_UI, true);
+        } catch (Throwable ignored) {
+            return true;
+        }
+    }
+
+    static void setLinkedSystemVolumeUiEnabled(Context context, boolean enabled) {
+        try {
+            prefs(context).edit().putBoolean(KEY_LINKED_SYSTEM_VOLUME_UI, enabled).apply();
+        } catch (Throwable error) {
+            recordError(context, context.getString(R.string.error_save_linked_system_volume_ui),
+                    error);
+        }
+    }
+
     static void resetControlSettings(Context context) {
         try {
             prefs(context).edit()
@@ -298,6 +317,7 @@ final class Prefs {
                     .putInt(KEY_HOLD_MS, 800)
                     .putInt(KEY_STEP, 1)
                     .putBoolean(KEY_LINKED_AUTO_FOLLOW, false)
+                    .putBoolean(KEY_LINKED_SYSTEM_VOLUME_UI, true)
                     .putBoolean(KEY_MODE_KEY_ENABLED, true)
                     .putBoolean(KEY_VISUAL_FEEDBACK_ENABLED, true)
                     .putBoolean(KEY_VIBRATION_FEEDBACK_ENABLED, true)

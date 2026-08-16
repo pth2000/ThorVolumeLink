@@ -243,6 +243,46 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:layout_marginTop="14dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/color_outline_variant" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/TextPreferenceTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/linked_system_volume_ui" />
+
+                    <TextView
+                        style="@style/TextPreferenceSummary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:text="@string/linked_system_volume_ui_summary" />
+                </LinearLayout>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/linked_system_volume_ui"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
                 android:layout_marginTop="20dp"
                 android:layout_marginBottom="16dp"
                 android:background="@color/color_outline_variant" />

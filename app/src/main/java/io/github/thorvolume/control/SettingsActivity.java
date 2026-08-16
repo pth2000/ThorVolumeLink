@@ -28,6 +28,7 @@ public final class SettingsActivity extends AppCompatActivity {
     private SwitchCompat visualFeedback;
     private SwitchCompat vibrationFeedback;
     private SwitchCompat linkedAutoFollow;
+    private SwitchCompat linkedSystemVolumeUi;
     private TextView visualFeedbackSummary;
     private TextView vibrationFeedbackSummary;
     private TextView modeKeySummary;
@@ -62,6 +63,7 @@ public final class SettingsActivity extends AppCompatActivity {
         visualFeedback = (SwitchCompat) findViewById(R.id.visual_feedback);
         vibrationFeedback = (SwitchCompat) findViewById(R.id.vibration_feedback);
         linkedAutoFollow = (SwitchCompat) findViewById(R.id.linked_auto_follow);
+        linkedSystemVolumeUi = (SwitchCompat) findViewById(R.id.linked_system_volume_ui);
         visualFeedbackSummary = (TextView) findViewById(R.id.visual_feedback_summary);
         vibrationFeedbackSummary = (TextView) findViewById(R.id.vibration_feedback_summary);
         modeKeySummary = (TextView) findViewById(R.id.mode_key_summary);
@@ -75,6 +77,7 @@ public final class SettingsActivity extends AppCompatActivity {
 
         modeKeyEnabled.setChecked(Prefs.isModeKeyEnabled(this));
         linkedAutoFollow.setChecked(Prefs.isLinkedAutoFollowEnabled(this));
+        linkedSystemVolumeUi.setChecked(Prefs.isLinkedSystemVolumeUiEnabled(this));
         modeKeyEnabled.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 Prefs.setModeKeyEnabled(SettingsActivity.this, isChecked);
@@ -101,6 +104,14 @@ public final class SettingsActivity extends AppCompatActivity {
                 }
             }
         });
+        linkedSystemVolumeUi.setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                    @Override public void onCheckedChanged(CompoundButton buttonView,
+                                                          boolean isChecked) {
+                        Prefs.setLinkedSystemVolumeUiEnabled(
+                                SettingsActivity.this, isChecked);
+                    }
+                });
         findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { finish(); }
         });
@@ -190,6 +201,10 @@ public final class SettingsActivity extends AppCompatActivity {
         if (modeKeyEnabled.isChecked() != enabled) modeKeyEnabled.setChecked(enabled);
         boolean autoFollow = Prefs.isLinkedAutoFollowEnabled(this);
         if (linkedAutoFollow.isChecked() != autoFollow) linkedAutoFollow.setChecked(autoFollow);
+        boolean systemVolumeUi = Prefs.isLinkedSystemVolumeUiEnabled(this);
+        if (linkedSystemVolumeUi.isChecked() != systemVolumeUi) {
+            linkedSystemVolumeUi.setChecked(systemVolumeUi);
+        }
         refreshKeyControls();
         refreshVisualFeedback();
         refreshVibrationFeedback();

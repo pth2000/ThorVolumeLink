@@ -110,13 +110,14 @@ final class VolumeControl {
     }
 
     static void adjustSynced(final Context context, int delta) {
-        final int main = adjustMain(context, delta, true);
+        final int main = adjustMain(context, delta,
+                Prefs.isLinkedSystemVolumeUiEnabled(context));
         final int max = mainMax(context);
         // 以百分比映射不同的档位范围，例如主屏 12/25 会对应副屏约 7/15。
         final int secondary = (int) Math.round((main * 15.0d) / Math.max(1, max));
         setSecondary(context, secondary, false, new VolumeCallback() {
             @Override public void onComplete(boolean ok, int value, String error) {
-                // 系统音量面板已经反馈主屏变化，联动成功时不再弹出重复提示。
+                // 是否显示系统面板由用户选择；联动成功时不再额外弹出应用反馈。
                 if (!ok) Ui.toast(context, context.getString(R.string.linked_sync_failed));
             }
         });

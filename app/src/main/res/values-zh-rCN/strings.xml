@@ -47,6 +47,8 @@
     <string name="volume_step_value">每次调节幅度\n%1$d 档</string>
     <string name="linked_auto_follow">自动跟随主屏音量</string>
     <string name="linked_auto_follow_summary">双屏联动模式下，也同步由系统或其他应用引起的主屏媒体音量变化。</string>
+    <string name="linked_system_volume_ui">显示系统音量面板</string>
+    <string name="linked_system_volume_ui_summary">联动模式下由 Android 显示原生音量面板；使用第三方音量面板应用时可关闭。</string>
     <string name="change">更改</string>
     <string name="adjust">调整</string>
     <string name="reset_controls">恢复默认控制设置</string>
@@ -65,6 +67,7 @@
     <string name="step_plain">%1$d 档</string>
     <string name="step_fast">5 档（快速）</string>
     <string name="error_save_linked_auto_follow">无法保存自动音量跟随设置</string>
+    <string name="error_save_linked_system_volume_ui">无法保存系统音量面板设置</string>
 
     <string name="section_volume">实时音量</string>
     <string name="volume_description">此页面打开时，音量信息会自动刷新。</string>
