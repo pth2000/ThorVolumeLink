@@ -75,9 +75,10 @@ public final class AboutActivity extends AppCompatActivity {
         updateStatus.setText(R.string.update_status_checking);
         UpdateChecker.check(this, new UpdateChecker.Callback() {
             @Override public void onComplete(UpdateChecker.Result result) {
+                // 配置变更会销毁页面但 isFinishing() 仍为 false，此时窗口令牌已失效，不能再弹窗。
+                if (isFinishing() || isDestroyed()) return;
                 checkUpdates.setEnabled(true);
                 checkUpdates.setText(R.string.check_updates);
-                if (isFinishing()) return;
                 showUpdateResult(result);
             }
         });

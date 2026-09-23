@@ -33,22 +33,32 @@
     <string name="mode_focus">跟随焦点</string>
     <string name="mode_main_description">音量键保持 Android 原生行为，调整主屏媒体音量。</string>
     <string name="mode_secondary_description">音量键由本应用接管，仅调整副屏音量。</string>
-    <string name="mode_sync_description">保留系统音量面板，并按相同比例同步副屏音量。</string>
+    <string name="mode_sync_description">保留系统音量面板，副屏按设置中的联动方式跟随主屏音量。</string>
     <string name="mode_focus_description">音量键控制最近交互的屏幕；按住期间不会切换目标。</string>
     <string name="mode_changed">音量键模式：%1$s</string>
 
     <string name="section_controls">按键行为</string>
-    <string name="controls_description">长按模式键可依次切换主屏、副屏、双屏联动和跟随焦点。音量增加和降低始终使用系统音量键。</string>
+    <string name="controls_description">长按模式键可在所选模式之间依次切换。音量增加和降低始终使用系统音量键。</string>
     <string name="switch_key">模式键</string>
     <string name="switch_key_value">模式键\n%1$s</string>
     <string name="hold_duration">长按判定时长</string>
     <string name="hold_duration_value">长按判定时长\n%1$d ms</string>
+    <string name="cycle_modes">参与轮换的模式</string>
+    <string name="cycle_modes_value">参与轮换的模式\n%1$s</string>
+    <string name="cycle_modes_minimum">至少保留两种模式参与轮换。</string>
+    <string name="mode_list_separator">、</string>
     <string name="volume_step">每次调节幅度</string>
     <string name="volume_step_value">每次调节幅度\n%1$d 档</string>
     <string name="linked_auto_follow">自动跟随主屏音量</string>
     <string name="linked_auto_follow_summary">双屏联动模式下，也同步由系统或其他应用引起的主屏媒体音量变化。</string>
     <string name="linked_system_volume_ui">显示系统音量面板</string>
     <string name="linked_system_volume_ui_summary">联动模式下由 Android 显示原生音量面板；使用第三方音量面板应用时可关闭。</string>
+    <string name="linked_behavior">联动方式</string>
+    <string name="linked_behavior_value">联动方式\n%1$s</string>
+    <string name="linked_behavior_match">按比例匹配</string>
+    <string name="linked_behavior_balance">保持音量平衡</string>
+    <string name="linked_behavior_match_detail">每次调整都把副屏设为与主屏相同的相对档位。</string>
+    <string name="linked_behavior_balance_detail">两块屏幕一起增减，并保留你手动调出的音量差。主页的“将副屏音量匹配至主屏”可重新对齐。</string>
     <string name="change">更改</string>
     <string name="adjust">调整</string>
     <string name="reset_controls">恢复默认控制设置</string>
@@ -68,6 +78,8 @@
     <string name="step_fast">5 档（快速）</string>
     <string name="error_save_linked_auto_follow">无法保存自动音量跟随设置</string>
     <string name="error_save_linked_system_volume_ui">无法保存系统音量面板设置</string>
+    <string name="error_save_linked_behavior">无法保存联动方式设置</string>
+    <string name="error_save_linked_balance">无法保存副屏音量偏移</string>
 
     <string name="section_volume">实时音量</string>
     <string name="volume_description">此页面打开时，音量信息会自动刷新。</string>
@@ -132,6 +144,7 @@
     <string name="error_begin_capture">开始按键录入失败</string>
     <string name="error_save_hold">保存长按判定时长失败</string>
     <string name="error_save_step">保存调节幅度失败</string>
+    <string name="error_save_cycle_modes">保存轮换模式设置失败</string>
     <string name="error_reset_controls">恢复控制设置失败</string>
     <string name="error_toast">显示提示失败</string>
     <string name="error_read_main">读取主屏音量失败</string>
@@ -158,7 +171,7 @@
     <string name="group_mode_switch">模式切换</string>
     <string name="group_volume_adjustment">音量调整</string>
     <string name="mode_key_enabled">使用实体键切换模式</string>
-    <string name="mode_key_enabled_summary">长按已配置的按键，在主屏、副屏、双屏联动和跟随焦点之间循环切换。</string>
+    <string name="mode_key_enabled_summary">长按已配置的按键，在下方勾选的模式之间循环切换。</string>
     <string name="mode_key_disabled_summary">只能从应用内切换模式，已配置按键将保持原有系统行为。</string>
     <string name="section_general">通用</string>
     <string name="section_key_feedback">按键反馈</string>

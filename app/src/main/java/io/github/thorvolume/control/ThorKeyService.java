@@ -2,6 +2,7 @@ package io.github.thorvolume.control;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -13,6 +14,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.Vibrator;
+import android.provider.Settings;
+import android.text.TextUtils;
 import android.view.Display;
 import android.view.KeyEvent;
 import android.view.ViewConfiguration;
@@ -61,9 +64,14 @@ public final class ThorKeyService extends AccessibilityService {
     /** 两种候选奇偶映射分别从哪些屏幕取得过一致的直接交互证据。 */
     private final int[] accessibilityEvidence = new int[2];
     private boolean volumeReceiverRegistered;
+    /** 副屏相对调整的后端写入尚未返回时，累计后续按键步进而不是继续排队。 */
+    private boolean secondaryAdjustInFlight;
+    private int pendingSecondaryDelta;
     private boolean linkedSyncInFlight;
     private int linkedSyncTarget = -1;
     private int pendingLinkedSecondary = -1;
+    /** 最近一次已知的主屏档位；保持平衡模式用它判断副屏是否被手动改过。 */
+    private int lastMainVolume = -1;
     private PowerManager.WakeLock linkedSyncWakeLock;
 
     /**
@@ -75,9 +83,17 @@ public final class ThorKeyService extends AccessibilityService {
             if (intent == null || !ACTION_VOLUME_CHANGED.equals(intent.getAction())) return;
             int stream = intent.getIntExtra(EXTRA_VOLUME_STREAM_TYPE, -1);
             if (stream != AudioManager.STREAM_MUSIC) return;
+            // 无论本次是否需要同步，都先记录主屏档位，供之后的平衡学习使用。
+            int previousMain = lastMainVolume;
+            lastMainVolume = VolumeControl.readMain(ThorKeyService.this);
             if (Prefs.getMode(ThorKeyService.this) != Prefs.MODE_SYNC) return;
             boolean interactive = isDeviceInteractive();
             if (interactive && !Prefs.isLinkedAutoFollowEnabled(ThorKeyService.this)) return;
+            // 用变化前的主屏档位核对副屏，避免把主屏刚发生的变化误认为用户改了平衡。
+            if (previousMain >= 0 && isLinkedSyncIdle()) {
+                VolumeControl.learnLinkedBalance(ThorKeyService.this, previousMain,
+                        VolumeControl.mainMax(ThorKeyService.this));
+            }
             requestLinkedSync(!interactive);
         }
     };
@@ -89,7 +105,9 @@ public final class ThorKeyService extends AccessibilityService {
             try {
                 switchLongTriggered = true;
                 int mode = Prefs.nextMode(ThorKeyService.this);
-                if (mode == Prefs.MODE_SYNC) {
+                if (mode == Prefs.MODE_SYNC
+                        && !Prefs.isLinkedBalanceEnabled(ThorKeyService.this)) {
+                    // 保持平衡模式下不主动对齐，以免抹掉用户已经调好的音量差。
                     VolumeControl.syncSecondaryToMain(ThorKeyService.this, false, null);
                 } else if (mode == Prefs.MODE_FOCUS) {
                     ensurePrivilegedFocusCalibration();
@@ -143,6 +161,26 @@ public final class ThorKeyService extends AccessibilityService {
         }
     };
 
+    /** 按完整组件名判断本版本的按键服务是否已在系统无障碍设置中启用。 */
+    static boolean isEnabled(Context context) {
+        try {
+            String enabled = Settings.Secure.getString(
+                    context.getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            if (enabled == null || enabled.length() == 0) return false;
+            // Standard 的包名是 Lite 包名的前缀，子串匹配会把另一版本的服务误判为本版本。
+            ComponentName self = new ComponentName(context, ThorKeyService.class);
+            TextUtils.SimpleStringSplitter splitter = new TextUtils.SimpleStringSplitter(':');
+            splitter.setString(enabled);
+            for (String entry : splitter) {
+                if (self.equals(ComponentName.unflattenFromString(entry))) return true;
+            }
+            return false;
+        } catch (Throwable error) {
+            Prefs.recordError(context, context.getString(R.string.error_check_accessibility), error);
+            return false;
+        }
+    }
+
     @Override protected void onServiceConnected() {
         super.onServiceConnected();
         stopFocusChangeTracking();
@@ -150,8 +188,10 @@ public final class ThorKeyService extends AccessibilityService {
         if (feedbackOverlay != null) feedbackOverlay.destroy();
         feedbackOverlay = new FeedbackOverlay(this);
         registerVolumeReceiver();
+        lastMainVolume = VolumeControl.readMain(this);
         if (Prefs.getMode(this) == Prefs.MODE_SYNC
-                && Prefs.isLinkedAutoFollowEnabled(this)) {
+                && Prefs.isLinkedAutoFollowEnabled(this)
+                && !Prefs.isLinkedBalanceEnabled(this)) {
             requestLinkedSync(false);
         }
         startFocusChangeTracking();
@@ -293,13 +333,40 @@ public final class ThorKeyService extends AccessibilityService {
         return mode != Prefs.MODE_MAIN;
     }
 
+    /**
+     * 按键重复由定时器驱动，不等待后端返回。Shizuku/Root 每次写入都要跨进程，
+     * 因此未完成期间的调整需要合并，否则长按会堆积请求、松手后音量继续变化。
+     */
     private void adjustHeldVolume(int mode) {
         int delta = (heldVolumeIncrease ? 1 : -1) * Prefs.getStep(this);
         if (mode == Prefs.MODE_SYNC) {
-            VolumeControl.adjustSynced(this, delta);
+            // 调整前先核对副屏是否被手动改过；长按连续写入期间跳过，避免读到旧值。
+            if (isLinkedSyncIdle()) {
+                VolumeControl.learnLinkedBalance(
+                        this, VolumeControl.readMain(this), VolumeControl.mainMax(this));
+            }
+            // 主屏由 AudioManager 同步完成；副屏目标与自动跟随共用同一个合并队列。
+            lastMainVolume = VolumeControl.adjustMain(
+                    this, delta, Prefs.isLinkedSystemVolumeUiEnabled(this));
+            requestLinkedSync(false);
         } else {
-            VolumeControl.adjustSecondary(this, delta, true, null);
+            pendingSecondaryDelta += delta;
+            drainSecondaryAdjust();
         }
+    }
+
+    /** 上一次写入完成前累计步进，完成后一次性写入，保证每次按键都被计入。 */
+    private void drainSecondaryAdjust() {
+        if (secondaryAdjustInFlight || pendingSecondaryDelta == 0) return;
+        final int delta = pendingSecondaryDelta;
+        pendingSecondaryDelta = 0;
+        secondaryAdjustInFlight = true;
+        VolumeControl.adjustSecondary(this, delta, true, new VolumeControl.VolumeCallback() {
+            @Override public void onComplete(boolean ok, int value, String error) {
+                secondaryAdjustInFlight = false;
+                drainSecondaryAdjust();
+            }
+        });
     }
 
     /** 把焦点跟随模式解析成一次按键实际使用的主屏或副屏目标。 */
@@ -403,14 +470,16 @@ public final class ThorKeyService extends AccessibilityService {
                 focusCalibrationPending = false;
                 long valueAfter = FocusChangeSetting.read(ThorKeyService.this);
                 focusChangeValue = valueAfter;
-                if (ok && displayId >= 0 && valueBefore == valueAfter
-                        && FocusChangeSetting.isAvailable(valueAfter)) {
-                    FocusChangeSetting.calibrateFromDisplay(
-                            ThorKeyService.this, displayId,
-                            FocusChangeSetting.ANCHOR_PRIVILEGED, valueAfter);
-                } else if (ok && displayId >= 0) {
-                    // 查询期间发生焦点切换，丢弃不一致快照并在稳定后重试。
-                    retry = true;
+                // 计数不可用时没有可校正的对象，不能重试，否则会无限循环执行 dumpsys。
+                if (ok && displayId >= 0 && FocusChangeSetting.isAvailable(valueAfter)) {
+                    if (valueBefore == valueAfter) {
+                        FocusChangeSetting.calibrateFromDisplay(
+                                ThorKeyService.this, displayId,
+                                FocusChangeSetting.ANCHOR_PRIVILEGED, valueAfter);
+                    } else {
+                        // 查询期间发生焦点切换，丢弃不一致快照并在稳定后重试。
+                        retry = true;
+                    }
                 }
                 if (retry) ensurePrivilegedFocusCalibration();
             }
@@ -442,11 +511,13 @@ public final class ThorKeyService extends AccessibilityService {
         }
     }
 
+    private boolean isLinkedSyncIdle() {
+        return !linkedSyncInFlight && pendingLinkedSecondary < 0;
+    }
+
     private void requestLinkedSync(boolean keepAwake) {
-        int main = VolumeControl.readMain(this);
-        int max = VolumeControl.mainMax(this);
-        int target = (int) Math.round(
-                (main * (double) VolumeControl.SECONDARY_MAX) / Math.max(1, max));
+        int target = VolumeControl.linkedTarget(
+                this, VolumeControl.readMain(this), VolumeControl.mainMax(this));
         // 若最新目标与正在写入的目标相同，无需再追加一次相同写入。
         pendingLinkedSecondary = linkedSyncInFlight && target == linkedSyncTarget ? -1 : target;
         if (keepAwake) refreshLinkedSyncWakeLock();
@@ -468,6 +539,7 @@ public final class ThorKeyService extends AccessibilityService {
             @Override public void onComplete(boolean ok, int value, String error) {
                 linkedSyncInFlight = false;
                 linkedSyncTarget = -1;
+                if (!ok) Ui.toast(ThorKeyService.this, getString(R.string.linked_sync_failed));
                 if (pendingLinkedSecondary >= 0) {
                     drainLinkedSync();
                 } else {

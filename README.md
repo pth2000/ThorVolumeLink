@@ -11,9 +11,9 @@ Thor Volume Link is an open-source volume controller for the dual-screen AYN Tho
 ## Features
 
 - Primary, secondary, linked, and follow-focus volume-key modes
-- Direct control and proportional synchronization of the secondary-screen volume
+- Direct control and proportional synchronization of the secondary-screen volume, or linked adjustment that keeps a manually set volume balance
 - Optional automatic following for primary-volume changes made through Android or other apps
-- Optional hardware-key mode switching with configurable key behavior
+- Optional hardware-key mode switching with configurable key behavior and a selectable rotation of modes
 - Live primary and secondary volume status
 
 ## Volume modes
@@ -22,10 +22,10 @@ Thor Volume Link is an open-source volume controller for the dual-screen AYN Tho
 | --- | --- |
 | Primary | Keeps Android's native volume-key behavior, adjusts only the primary media volume, and shows the system volume panel. |
 | Secondary | Lets the app handle the volume keys and adjust only the secondary-screen volume without changing the primary volume. |
-| Linked | Adjusts the primary media volume and maps the secondary screen to the same relative percentage. Optional automatic following also synchronizes changes made through Android or other apps. |
+| Linked | Adjusts the primary media volume and maps the secondary screen to the same relative percentage. Optional automatic following also synchronizes changes made through Android or other apps. Choosing **Keep volume balance** as the linked adjustment in Settings makes both screens move together while preserving a difference set by hand instead of overwriting it. |
 | Follow focus | Controls the most recently interacted-with display: the upper display uses primary volume and the lower display uses secondary volume. The target remains fixed while a volume key is held. |
 
-All four modes support short presses and native-style press-and-hold adjustment. **Adjustment step** under **Settings → Key & controls** applies when the app handles the hardware volume keys: in Secondary and Linked modes, and when Follow focus targets the lower display. Primary mode and Follow focus on the upper display retain Android's native step size. When the hardware mode key is enabled, holding it cycles through the modes; otherwise, modes remain selectable from the app's main screen.
+All four modes support short presses and native-style press-and-hold adjustment. **Adjustment step** under **Settings → Key & controls** applies when the app handles the hardware volume keys: in Secondary and Linked modes, and when Follow focus targets the lower display. Primary mode and Follow focus on the upper display retain Android's native step size. When the hardware mode key is enabled, holding it cycles through the modes selected under **Settings → Key & controls → Modes in rotation** (at least two); otherwise, modes remain selectable from the app's main screen.
 
 **Using the app while locked:** All modes work normally while the device is locked as long as the display remains on. After the display turns off, the volume keys can directly adjust only the primary volume; in Linked mode, the secondary volume follows those changes. Due to system limitations, holding a volume key may not adjust continuously, and Secondary or Follow focus cannot control the lower display in this state.
 

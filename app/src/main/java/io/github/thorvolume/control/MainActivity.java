@@ -5,7 +5,6 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.Settings;
 import android.view.Display;
 import android.view.View;
 import android.widget.Button;
@@ -13,8 +12,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AlertDialog;
-
-import java.util.Locale;
 
 /** 应用的主控制面板，集中展示当前模式、实时音量和服务状态。 */
 public final class MainActivity extends AppCompatActivity {
@@ -136,7 +133,10 @@ public final class MainActivity extends AppCompatActivity {
         modeSync.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
                 setMode(Prefs.MODE_SYNC);
-                VolumeControl.syncSecondaryToMain(MainActivity.this, false, null);
+                // 保持平衡模式下沿用当前两屏关系，不做一次性对齐。
+                if (!Prefs.isLinkedBalanceEnabled(MainActivity.this)) {
+                    VolumeControl.syncSecondaryToMain(MainActivity.this, false, null);
+                }
             }
         });
         modeFocus.setOnClickListener(new View.OnClickListener() {
@@ -281,7 +281,7 @@ public final class MainActivity extends AppCompatActivity {
 
         boolean backendAvailable = SecondaryVolumeGateway.isBackendAvailable(this);
         boolean authorization = SecondaryVolumeGateway.hasAuthorization(this);
-        boolean serviceEnabled = isAccessibilityEnabled();
+        boolean serviceEnabled = ThorKeyService.isEnabled(this);
         int mode = Prefs.getMode(this);
 
         backendStatus.setText(SecondaryVolumeGateway.backendStatus(this));
@@ -356,16 +356,5 @@ public final class MainActivity extends AppCompatActivity {
                 }
             }
         });
-    }
-
-    private boolean isAccessibilityEnabled() {
-        try {
-            String enabled = Settings.Secure.getString(getContentResolver(), "enabled_accessibility_services");
-            if (enabled == null) return false;
-            return enabled.toLowerCase(Locale.US).contains(getPackageName().toLowerCase(Locale.US));
-        } catch (Throwable error) {
-            Prefs.recordError(this, getString(R.string.error_check_accessibility), error);
-            return false;
-        }
     }
 }

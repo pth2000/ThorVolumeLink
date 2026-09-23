@@ -109,25 +109,52 @@ final class VolumeControl {
         };
     }
 
-    static void adjustSynced(final Context context, int delta) {
-        final int main = adjustMain(context, delta,
-                Prefs.isLinkedSystemVolumeUiEnabled(context));
-        final int max = mainMax(context);
-        // 以百分比映射不同的档位范围，例如主屏 12/25 会对应副屏约 7/15。
-        final int secondary = (int) Math.round((main * 15.0d) / Math.max(1, max));
-        setSecondary(context, secondary, false, new VolumeCallback() {
-            @Override public void onComplete(boolean ok, int value, String error) {
-                // 是否显示系统面板由用户选择；联动成功时不再额外弹出应用反馈。
-                if (!ok) Ui.toast(context, context.getString(R.string.linked_sync_failed));
-            }
-        });
+    /** 主屏档位按百分比映射到副屏 0～15 档，例如主屏 12/25 对应副屏约 7/15。 */
+    static int mappedSecondary(int main, int max) {
+        return clamp((int) Math.round((main * (double) SECONDARY_MAX) / Math.max(1, max)));
     }
 
-    /** 立即将副屏设置为主屏当前音量所对应的相对比例。 */
+    /**
+     * 联动模式下主屏当前档位对应的副屏目标。
+     *
+     * <p>保持平衡模式会叠加用户手动调出的偏移。主屏归零时两屏一起静音，
+     * 主屏再次调高后偏移会自动恢复，而不会像纯相对增减那样在边界处永久漂移。</p>
+     */
+    static int linkedTarget(Context context, int main, int max) {
+        if (main <= 0) return 0;
+        int mapped = mappedSecondary(main, max);
+        if (!Prefs.isLinkedBalanceEnabled(context)) return mapped;
+        return clamp(mapped + Prefs.getLinkedBalance(context));
+    }
+
+    /**
+     * 保持平衡模式下，把副屏当前值与联动预期值的差记为新的偏移。
+     *
+     * <p>调用方需保证没有联动写入正在进行，否则读到的可能是尚未落盘的旧值；
+     * {@code main} 应是上一次联动写入时的主屏档位，而不是刚刚变化后的值。</p>
+     */
+    static void learnLinkedBalance(Context context, int main, int max) {
+        if (!Prefs.isLinkedBalanceEnabled(context)) return;
+        int current = readSecondaryNow(context);
+        if (current < 0 || current == linkedTarget(context, main, max)) return;
+        Prefs.setLinkedBalance(context, current - mappedSecondary(main, max));
+    }
+
+    /** 同步读取副屏当前档位；读取不需要特权，设置项缺失时返回 -1。 */
+    private static int readSecondaryNow(Context context) {
+        try {
+            return clamp(Settings.System.getInt(context.getContentResolver(), SECONDARY_SETTING_KEY));
+        } catch (Throwable ignored) {
+            return -1;
+        }
+    }
+
+    /** 立即把副屏对齐到主屏当前音量的相对比例；保持平衡模式下同时清除已记录的偏移。 */
     static void syncSecondaryToMain(final Context context, final boolean showFeedback, final VolumeCallback callback) {
         final int main = readMain(context);
         final int max = mainMax(context);
-        int secondary = (int) Math.round((main * 15.0d) / Math.max(1, max));
+        if (Prefs.isLinkedBalanceEnabled(context)) Prefs.setLinkedBalance(context, 0);
+        int secondary = linkedTarget(context, main, max);
         setSecondary(context, secondary, false, new VolumeCallback() {
             @Override public void onComplete(boolean ok, int value, String error) {
                 if (showFeedback) {

@@ -79,6 +79,11 @@ final class FocusChangeSetting {
         long bootCount = readBootCount(context);
         long savedBootCount = state.getLong(STATE_BOOT_COUNT, MISSING_BOOT_COUNT);
         int mappingVersion = state.getInt(STATE_MAPPING_VERSION, 0);
+        // 每个无障碍事件和按键都会经过这里；没有变化时不要再走一次编辑与写盘队列。
+        if (savedBootCount == bootCount && mappingVersion == MAPPING_VERSION
+                && state.getLong(STATE_LAST_VALUE, MISSING_VALUE) == value) {
+            return;
+        }
         SharedPreferences.Editor editor = state.edit()
                 .putLong(STATE_BOOT_COUNT, bootCount)
                 .putInt(STATE_MAPPING_VERSION, MAPPING_VERSION)
@@ -149,10 +154,15 @@ final class FocusChangeSetting {
         return true;
     }
 
-    /** 当前映射缺失，或指定来源比现有锚点更可靠时，需要继续校正。 */
+    /**
+     * 当前映射缺失，或指定来源比现有锚点更可靠时，需要继续校正。
+     *
+     * <p>计数不可用时没有可以配对的相位，返回 true 只会让调用方用无效值反复尝试；
+     * 一旦计数可读，观察者与按键路径会自然触发新的校正。</p>
+     */
     static synchronized boolean needsCalibrationFrom(
             Context context, long value, int anchorSource) {
-        if (!isAvailable(value)) return true;
+        if (!isAvailable(value)) return false;
         observe(context, value);
         SharedPreferences values = state(context);
         int existingParity = values.getInt(STATE_PRIMARY_PARITY, MISSING_PARITY);

@@ -30,6 +30,16 @@ final class Prefs {
     static final int PRIVILEGED_BACKEND_SHIZUKU = 0;
     static final int PRIVILEGED_BACKEND_ROOT = 1;
 
+    /** 参与模式键轮换的模式位掩码，第 n 位对应模式 n；默认四种全部参与。 */
+    static final int CYCLE_ALL_MODES = (1 << (MODE_FOCUS + 1)) - 1;
+    /** 少于两种模式时轮换没有意义，读取与保存都会回退为全部参与。 */
+    static final int CYCLE_MIN_MODES = 2;
+
+    /** 联动时每次都把副屏设为与主屏相同的相对档位。 */
+    static final int LINKED_MATCH = 0;
+    /** 联动时保留用户手动调出的副屏偏移，两屏一起增减。 */
+    static final int LINKED_BALANCE = 1;
+
     private static final String FILE = "thor_volume_control";
     private static final String KEY_MODE = "mode";
     private static final String KEY_HOLD_MS = "hold_ms";
@@ -41,6 +51,9 @@ final class Prefs {
     private static final String KEY_SWITCH_CODE = "switch_key_code";
     private static final String KEY_SWITCH_SCAN = "switch_scan_code";
     private static final String KEY_MODE_KEY_ENABLED = "mode_key_enabled";
+    private static final String KEY_CYCLE_MODES = "cycle_modes";
+    private static final String KEY_LINKED_BEHAVIOR = "linked_behavior";
+    private static final String KEY_LINKED_BALANCE = "linked_balance";
     /** 沿用旧键名，升级时保留用户此前的反馈开关选择。 */
     private static final String KEY_VISUAL_FEEDBACK_ENABLED = "notification_feedback_enabled";
     private static final String KEY_VIBRATION_FEEDBACK_ENABLED = "vibration_feedback_enabled";
@@ -107,10 +120,58 @@ final class Prefs {
         }
     }
 
+    /** 从当前模式起，按固定顺序找到下一个参与轮换的模式并切换过去。 */
     static int nextMode(Context context) {
-        int next = (getMode(context) + 1) % (MODE_FOCUS + 1);
+        int mask = getCycleModes(context);
+        int current = getMode(context);
+        int next = current;
+        // 当前模式即使已被排除出轮换，也从它的下一位开始找，保证总能离开。
+        for (int offset = 1; offset <= MODE_FOCUS + 1; offset++) {
+            int candidate = (current + offset) % (MODE_FOCUS + 1);
+            if (isModeInCycle(mask, candidate)) {
+                next = candidate;
+                break;
+            }
+        }
         setMode(context, next);
         return next;
+    }
+
+    static int getCycleModes(Context context) {
+        try {
+            return sanitizeCycleModes(prefs(context).getInt(KEY_CYCLE_MODES, CYCLE_ALL_MODES));
+        } catch (Throwable ignored) {
+            return CYCLE_ALL_MODES;
+        }
+    }
+
+    static void setCycleModes(Context context, int mask) {
+        try {
+            prefs(context).edit().putInt(KEY_CYCLE_MODES, sanitizeCycleModes(mask)).apply();
+        } catch (Throwable error) {
+            recordError(context, context.getString(R.string.error_save_cycle_modes), error);
+        }
+    }
+
+    static boolean isModeInCycle(int mask, int mode) {
+        return mode >= MODE_MAIN && mode <= MODE_FOCUS && (mask & (1 << mode)) != 0;
+    }
+
+    private static int sanitizeCycleModes(int mask) {
+        int safe = mask & CYCLE_ALL_MODES;
+        return Integer.bitCount(safe) < CYCLE_MIN_MODES ? CYCLE_ALL_MODES : safe;
+    }
+
+    /** 按模式顺序拼出参与轮换的模式名称，供设置页展示。 */
+    static String cycleModesLabel(Context context, int mask) {
+        StringBuilder text = new StringBuilder();
+        String separator = context.getString(R.string.mode_list_separator);
+        for (int mode = MODE_MAIN; mode <= MODE_FOCUS; mode++) {
+            if (!isModeInCycle(mask, mode)) continue;
+            if (text.length() > 0) text.append(separator);
+            text.append(modeLabel(context, mode));
+        }
+        return text.toString();
     }
 
     /** 是否允许已绑定实体键通过长按切换音量模式。 */
@@ -309,6 +370,50 @@ final class Prefs {
         }
     }
 
+    static int getLinkedBehavior(Context context) {
+        try {
+            int value = prefs(context).getInt(KEY_LINKED_BEHAVIOR, LINKED_MATCH);
+            return value == LINKED_BALANCE ? LINKED_BALANCE : LINKED_MATCH;
+        } catch (Throwable ignored) {
+            return LINKED_MATCH;
+        }
+    }
+
+    static void setLinkedBehavior(Context context, int behavior) {
+        int safe = behavior == LINKED_BALANCE ? LINKED_BALANCE : LINKED_MATCH;
+        try {
+            prefs(context).edit().putInt(KEY_LINKED_BEHAVIOR, safe).apply();
+        } catch (Throwable error) {
+            recordError(context, context.getString(R.string.error_save_linked_behavior), error);
+        }
+    }
+
+    static boolean isLinkedBalanceEnabled(Context context) {
+        return getLinkedBehavior(context) == LINKED_BALANCE;
+    }
+
+    /** 保持平衡模式下副屏相对主屏映射档位的偏移，范围为 -15～15 档。 */
+    static int getLinkedBalance(Context context) {
+        try {
+            return clampLinkedBalance(prefs(context).getInt(KEY_LINKED_BALANCE, 0));
+        } catch (Throwable ignored) {
+            return 0;
+        }
+    }
+
+    static void setLinkedBalance(Context context, int offset) {
+        try {
+            prefs(context).edit().putInt(KEY_LINKED_BALANCE, clampLinkedBalance(offset)).apply();
+        } catch (Throwable error) {
+            recordError(context, context.getString(R.string.error_save_linked_balance), error);
+        }
+    }
+
+    private static int clampLinkedBalance(int offset) {
+        return Math.max(-VolumeControl.SECONDARY_MAX,
+                Math.min(VolumeControl.SECONDARY_MAX, offset));
+    }
+
     static void resetControlSettings(Context context) {
         try {
             prefs(context).edit()
@@ -318,7 +423,10 @@ final class Prefs {
                     .putInt(KEY_STEP, 1)
                     .putBoolean(KEY_LINKED_AUTO_FOLLOW, false)
                     .putBoolean(KEY_LINKED_SYSTEM_VOLUME_UI, true)
+                    .putInt(KEY_LINKED_BEHAVIOR, LINKED_MATCH)
+                    .putInt(KEY_LINKED_BALANCE, 0)
                     .putBoolean(KEY_MODE_KEY_ENABLED, true)
+                    .putInt(KEY_CYCLE_MODES, CYCLE_ALL_MODES)
                     .putBoolean(KEY_VISUAL_FEEDBACK_ENABLED, true)
                     .putBoolean(KEY_VIBRATION_FEEDBACK_ENABLED, true)
                     .putBoolean(KEY_VIBRATION_FEEDBACK_CONFIGURED, true)

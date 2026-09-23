@@ -33,6 +33,8 @@ final class EditionBackend {
     private static final int OPERATION_ADJUST = 2;
     /** UserService 实现变化时递增，确保同 versionCode 的开发包也会替换旧 daemon。 */
     private static final int USER_SERVICE_IMPLEMENTATION_VERSION = 3;
+    /** UserService 进程通常几秒内就绪；超时后判定失败，避免后续请求永远排队等待。 */
+    private static final long BIND_TIMEOUT_MS = 15000L;
 
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final ExecutorService WORKER = Executors.newSingleThreadExecutor();
@@ -51,6 +53,15 @@ final class EditionBackend {
     private interface ServiceReadyCallback {
         void onReady(boolean ready, String error);
     }
+
+    private static final Runnable BIND_TIMEOUT = new Runnable() {
+        @Override public void run() {
+            synchronized (LOCK) {
+                if (!bindingUserService) return;
+            }
+            dispatchReady(false, "Shizuku volume service did not start in time");
+        }
+    };
 
     private static final Shizuku.OnBinderReceivedListener BINDER_RECEIVED_LISTENER =
             new Shizuku.OnBinderReceivedListener() {
@@ -398,6 +409,8 @@ final class EditionBackend {
 
         try {
             Shizuku.bindUserService(getUserServiceArgs(context), USER_SERVICE_CONNECTION);
+            MAIN.removeCallbacks(BIND_TIMEOUT);
+            MAIN.postDelayed(BIND_TIMEOUT, BIND_TIMEOUT_MS);
         } catch (Throwable bindError) {
             dispatchReady(false, "Unable to start Shizuku volume service: "
                     + SecondaryVolumeResult.format(bindError));
@@ -475,6 +488,7 @@ final class EditionBackend {
     }
 
     private static void dispatchReady(final boolean ready, final String error) {
+        MAIN.removeCallbacks(BIND_TIMEOUT);
         final List<ServiceReadyCallback> callbacks;
         synchronized (LOCK) {
             bindingUserService = false;

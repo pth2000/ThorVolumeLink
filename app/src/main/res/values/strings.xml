@@ -33,22 +33,32 @@
     <string name="mode_focus">Follow focus</string>
     <string name="mode_main_description">Volume keys retain Android’s default behavior and adjust the primary-screen media volume.</string>
     <string name="mode_secondary_description">Volume keys are intercepted and adjust only the secondary-screen volume.</string>
-    <string name="mode_sync_description">Android’s volume panel remains visible while the secondary-screen volume follows the same relative level.</string>
+    <string name="mode_sync_description">Android’s volume panel remains visible while the secondary screen follows the primary volume according to the linked adjustment setting.</string>
     <string name="mode_focus_description">Volume keys control the most recently interacted-with screen. The target stays fixed while a key is held.</string>
     <string name="mode_changed">Volume-key mode: %1$s</string>
 
     <string name="section_controls">Key behavior</string>
-    <string name="controls_description">Long-press the mode key to cycle through Primary, Secondary, Linked, and Follow focus. Volume Up and Volume Down always remain the adjustment keys.</string>
+    <string name="controls_description">Long-press the mode key to cycle through the selected modes. Volume Up and Volume Down always remain the adjustment keys.</string>
     <string name="switch_key">Mode key</string>
     <string name="switch_key_value">Mode key\n%1$s</string>
     <string name="hold_duration">Long-press threshold</string>
     <string name="hold_duration_value">Long-press threshold\n%1$d ms</string>
+    <string name="cycle_modes">Modes in rotation</string>
+    <string name="cycle_modes_value">Modes in rotation\n%1$s</string>
+    <string name="cycle_modes_minimum">Keep at least two modes in the rotation.</string>
+    <string name="mode_list_separator">", "</string>
     <string name="volume_step">Adjustment step</string>
     <string name="volume_step_value">Adjustment step\n%1$d level(s)</string>
     <string name="linked_auto_follow">Follow primary volume automatically</string>
     <string name="linked_auto_follow_summary">In Linked mode, also mirror primary media-volume changes made by Android or other apps.</string>
     <string name="linked_system_volume_ui">Show the system volume panel</string>
     <string name="linked_system_volume_ui_summary">In Linked mode, ask Android to show its built-in volume panel. Turn this off when using a custom volume-panel app.</string>
+    <string name="linked_behavior">Linked adjustment</string>
+    <string name="linked_behavior_value">Linked adjustment\n%1$s</string>
+    <string name="linked_behavior_match">Match levels</string>
+    <string name="linked_behavior_balance">Keep volume balance</string>
+    <string name="linked_behavior_match_detail">Every change sets the secondary screen to the same relative level as the primary screen.</string>
+    <string name="linked_behavior_balance_detail">Both screens move together and keep a difference you set by hand. “Match secondary volume to primary” on the main screen realigns them.</string>
     <string name="change">Change</string>
     <string name="adjust">Adjust</string>
     <string name="reset_controls">Restore default control settings</string>
@@ -68,6 +78,8 @@
     <string name="step_fast">5 levels (fast)</string>
     <string name="error_save_linked_auto_follow">Unable to save automatic volume following</string>
     <string name="error_save_linked_system_volume_ui">Unable to save the system volume-panel setting</string>
+    <string name="error_save_linked_behavior">Unable to save the linked adjustment setting</string>
+    <string name="error_save_linked_balance">Unable to save the secondary volume offset</string>
 
     <string name="section_volume">Live volume</string>
     <string name="volume_description">Values refresh automatically while this screen is open.</string>
@@ -132,6 +144,7 @@
     <string name="error_begin_capture">Starting key capture failed</string>
     <string name="error_save_hold">Saving the long-press threshold failed</string>
     <string name="error_save_step">Saving the adjustment step failed</string>
+    <string name="error_save_cycle_modes">Saving the rotation modes failed</string>
     <string name="error_reset_controls">Restoring control settings failed</string>
     <string name="error_toast">Displaying a message failed</string>
     <string name="error_read_main">Reading primary volume failed</string>
@@ -158,7 +171,7 @@
     <string name="group_mode_switch">Mode switching</string>
     <string name="group_volume_adjustment">Volume adjustment</string>
     <string name="mode_key_enabled">Use a hardware key to switch modes</string>
-    <string name="mode_key_enabled_summary">Long-press the configured key to cycle through Primary, Secondary, Linked, and Follow focus.</string>
+    <string name="mode_key_enabled_summary">Long-press the configured key to cycle through the modes selected below.</string>
     <string name="mode_key_disabled_summary">Modes can be changed only from the app. The configured key keeps its original system behavior.</string>
     <string name="section_general">General</string>
     <string name="section_key_feedback">Key feedback</string>

@@ -5,7 +5,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.Settings;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
@@ -16,9 +19,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.os.LocaleListCompat;
-
-import java.util.Locale;
 
 /** 按键行为、语言、外观和项目入口的集中设置页。 */
 public final class SettingsActivity extends AppCompatActivity {
@@ -29,16 +31,20 @@ public final class SettingsActivity extends AppCompatActivity {
     private SwitchCompat vibrationFeedback;
     private SwitchCompat linkedAutoFollow;
     private SwitchCompat linkedSystemVolumeUi;
+    private TextView linkedBehaviorStatus;
     private TextView visualFeedbackSummary;
     private TextView vibrationFeedbackSummary;
     private TextView modeKeySummary;
     private TextView switchKeyStatus;
     private TextView holdStatus;
+    private TextView cycleModesStatus;
     private TextView stepStatus;
     private TextView languageStatus;
     private TextView nightStatus;
     private Button changeSwitchKey;
     private Button changeHold;
+    private Button changeCycleModes;
+    private Button changeLinkedBehavior;
     private AlertDialog captureDialog;
     private int localCapturedCode;
     private int localCapturedScan;
@@ -64,16 +70,20 @@ public final class SettingsActivity extends AppCompatActivity {
         vibrationFeedback = (SwitchCompat) findViewById(R.id.vibration_feedback);
         linkedAutoFollow = (SwitchCompat) findViewById(R.id.linked_auto_follow);
         linkedSystemVolumeUi = (SwitchCompat) findViewById(R.id.linked_system_volume_ui);
+        linkedBehaviorStatus = (TextView) findViewById(R.id.linked_behavior_status);
         visualFeedbackSummary = (TextView) findViewById(R.id.visual_feedback_summary);
         vibrationFeedbackSummary = (TextView) findViewById(R.id.vibration_feedback_summary);
         modeKeySummary = (TextView) findViewById(R.id.mode_key_summary);
         switchKeyStatus = (TextView) findViewById(R.id.switch_key_status);
         holdStatus = (TextView) findViewById(R.id.hold_status);
+        cycleModesStatus = (TextView) findViewById(R.id.cycle_modes_status);
         stepStatus = (TextView) findViewById(R.id.step_status);
         languageStatus = (TextView) findViewById(R.id.language_status);
         nightStatus = (TextView) findViewById(R.id.night_status);
         changeSwitchKey = (Button) findViewById(R.id.change_switch_key);
         changeHold = (Button) findViewById(R.id.change_hold);
+        changeCycleModes = (Button) findViewById(R.id.change_cycle_modes);
+        changeLinkedBehavior = (Button) findViewById(R.id.change_linked_behavior);
 
         modeKeyEnabled.setChecked(Prefs.isModeKeyEnabled(this));
         linkedAutoFollow.setChecked(Prefs.isLinkedAutoFollowEnabled(this));
@@ -99,7 +109,8 @@ public final class SettingsActivity extends AppCompatActivity {
         linkedAutoFollow.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 Prefs.setLinkedAutoFollowEnabled(SettingsActivity.this, isChecked);
-                if (isChecked && Prefs.getMode(SettingsActivity.this) == Prefs.MODE_SYNC) {
+                if (isChecked && Prefs.getMode(SettingsActivity.this) == Prefs.MODE_SYNC
+                        && !Prefs.isLinkedBalanceEnabled(SettingsActivity.this)) {
                     VolumeControl.syncSecondaryToMain(SettingsActivity.this, false, null);
                 }
             }
@@ -120,6 +131,12 @@ public final class SettingsActivity extends AppCompatActivity {
         });
         changeHold.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { showHoldDialog(); }
+        });
+        changeCycleModes.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { showCycleModesDialog(); }
+        });
+        changeLinkedBehavior.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { showLinkedBehaviorDialog(); }
         });
         findViewById(R.id.change_step).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { showStepDialog(); }
@@ -208,9 +225,12 @@ public final class SettingsActivity extends AppCompatActivity {
         refreshKeyControls();
         refreshVisualFeedback();
         refreshVibrationFeedback();
+        refreshLinkedBehavior();
         switchKeyStatus.setText(getString(R.string.switch_key_value,
                 Prefs.bindingLabel(this, Prefs.getSwitchBinding(this))));
         holdStatus.setText(getString(R.string.hold_duration_value, Integer.valueOf(Prefs.getHoldMs(this))));
+        cycleModesStatus.setText(getString(R.string.cycle_modes_value,
+                Prefs.cycleModesLabel(this, Prefs.getCycleModes(this))));
         stepStatus.setText(getString(R.string.volume_step_value, Integer.valueOf(Prefs.getStep(this))));
         refreshLanguage();
         refreshNightMode();
@@ -223,10 +243,13 @@ public final class SettingsActivity extends AppCompatActivity {
         modeKeySummary.setText(enabled ? R.string.mode_key_enabled_summary : R.string.mode_key_disabled_summary);
         changeSwitchKey.setEnabled(enabled);
         changeHold.setEnabled(enabled);
+        changeCycleModes.setEnabled(enabled);
         switchKeyStatus.setAlpha(enabled ? 1f : 0.45f);
         holdStatus.setAlpha(enabled ? 1f : 0.45f);
+        cycleModesStatus.setAlpha(enabled ? 1f : 0.45f);
         changeSwitchKey.setAlpha(enabled ? 1f : 0.45f);
         changeHold.setAlpha(enabled ? 1f : 0.45f);
+        changeCycleModes.setAlpha(enabled ? 1f : 0.45f);
     }
 
     private void refreshVisualFeedback() {
@@ -264,7 +287,9 @@ public final class SettingsActivity extends AppCompatActivity {
     }
 
     private void beginCapture() {
-        if (!isAccessibilityEnabled()) Ui.toast(this, getString(R.string.key_capture_accessibility_hint));
+        if (!ThorKeyService.isEnabled(this)) {
+            Ui.toast(this, getString(R.string.key_capture_accessibility_hint));
+        }
         handler.removeCallbacks(capturePoll);
         closeCaptureDialog();
         Prefs.beginCapture(this);
@@ -321,6 +346,91 @@ public final class SettingsActivity extends AppCompatActivity {
                     }
                 })
                 .show();
+    }
+
+    private void refreshLinkedBehavior() {
+        if (linkedBehaviorStatus == null) return;
+        int label = Prefs.isLinkedBalanceEnabled(this)
+                ? R.string.linked_behavior_balance : R.string.linked_behavior_match;
+        linkedBehaviorStatus.setText(getString(R.string.linked_behavior_value, getString(label)));
+    }
+
+    /** 两种联动方式的说明只在选择时展示，设置页本身保持静态的“标题 + 当前选项”。 */
+    private void showLinkedBehaviorDialog() {
+        final CharSequence[] labels = new CharSequence[] {
+                twoLineChoice(R.string.linked_behavior_match, R.string.linked_behavior_match_detail),
+                twoLineChoice(R.string.linked_behavior_balance, R.string.linked_behavior_balance_detail)
+        };
+        int checked = Prefs.isLinkedBalanceEnabled(this) ? 1 : 0;
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.linked_behavior)
+                .setSingleChoiceItems(labels, checked, new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        Prefs.setLinkedBehavior(SettingsActivity.this,
+                                which == 1 ? Prefs.LINKED_BALANCE : Prefs.LINKED_MATCH);
+                        dialog.dismiss();
+                        refreshState();
+                    }
+                })
+                .show();
+    }
+
+    /** 多选参与轮换的模式；取消勾选到只剩一种时立即恢复，避免保存无意义的配置。 */
+    private void showCycleModesDialog() {
+        final int count = Prefs.MODE_FOCUS + 1;
+        final String[] labels = new String[count];
+        final boolean[] checked = new boolean[count];
+        int mask = Prefs.getCycleModes(this);
+        for (int mode = 0; mode < count; mode++) {
+            labels[mode] = Prefs.modeLabel(this, mode);
+            checked[mode] = Prefs.isModeInCycle(mask, mode);
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.cycle_modes)
+                .setMultiChoiceItems(labels, checked, new DialogInterface.OnMultiChoiceClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                        // 框架已先更新 checked[which]，这里统计的是取消后的数量。
+                        if (isChecked || countChecked(checked) >= Prefs.CYCLE_MIN_MODES) return;
+                        checked[which] = true;
+                        ((AlertDialog) dialog).getListView().setItemChecked(which, true);
+                        Ui.toast(SettingsActivity.this, getString(R.string.cycle_modes_minimum));
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.apply, new DialogInterface.OnClickListener() {
+                    @Override public void onClick(DialogInterface dialog, int which) {
+                        int selected = 0;
+                        for (int mode = 0; mode < count; mode++) {
+                            if (checked[mode]) selected |= 1 << mode;
+                        }
+                        Prefs.setCycleModes(SettingsActivity.this, selected);
+                        refreshState();
+                    }
+                })
+                .show();
+    }
+
+    /** 单选项显示为“名称 + 次要说明”两行，说明使用较小的次要文字样式。 */
+    private CharSequence twoLineChoice(int titleRes, int detailRes) {
+        String title = getString(titleRes);
+        SpannableStringBuilder text = new SpannableStringBuilder(title)
+                .append('\n')
+                .append(getString(detailRes));
+        int start = title.length() + 1;
+        text.setSpan(new RelativeSizeSpan(0.85f), start, text.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        text.setSpan(new ForegroundColorSpan(
+                        ContextCompat.getColor(this, R.color.color_on_surface_variant)),
+                start, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return text;
+    }
+
+    private static int countChecked(boolean[] values) {
+        int total = 0;
+        for (boolean value : values) {
+            if (value) total++;
+        }
+        return total;
     }
 
     private void showStepDialog() {
@@ -380,15 +490,5 @@ public final class SettingsActivity extends AppCompatActivity {
                     }
                 })
                 .show();
-    }
-
-    private boolean isAccessibilityEnabled() {
-        try {
-            String enabled = Settings.Secure.getString(getContentResolver(), "enabled_accessibility_services");
-            if (enabled == null) return false;
-            return enabled.toLowerCase(Locale.US).contains(getPackageName().toLowerCase(Locale.US));
-        } catch (Throwable ignored) {
-            return false;
-        }
     }
 }
